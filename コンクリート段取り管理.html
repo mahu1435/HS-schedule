@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>コンクリート製品段取り管理</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: #ffffff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px;
+            z-index: 10;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .status-item {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .status-item.action-btn {
+            cursor: pointer;
+            justify-content: center;
+            align-items: center;
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+            transition: background 0.2s;
+        }
+
+        .status-item.action-btn:active {
+            background: var(--primary-hover);
+        }
+
+        .status-item label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .status-item input {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 800;
+            width: 100%;
+            outline: none;
+        }
+
+        .status-item .btn-icon {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .summary-section {
+            margin-bottom: 4px;
+        }
+
+        .summary-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+
+        .summary-item .label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .summary-item .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-left: 4px;
+            color: var(--primary);
+        }
+
+        .gauge-container {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .gauge-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+
+        .gauge-fill.goal-reached {
+            background: var(--accent);
+        }
+
+        /* Lists */
+        .lists-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 8px;
+        }
+
+        .list-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s ease;
+        }
+
+        .list-wrapper.expanded {
+            flex: 100;
+            z-index: 5;
+        }
+
+        .list-wrapper.shrunk {
+            flex: 0;
+            min-height: 0;
+            overflow: hidden;
+            border: none;
+            padding: 0;
+            margin: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-icon-only {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .btn-icon-only:hover {
+            background: var(--bg-color);
+            color: var(--primary);
+        }
+
+        .btn-icon-only.active {
+            color: var(--primary);
+            background: #e0e7ff;
+        }
+
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .badge {
+            background: var(--bg-color);
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-text {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .card-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Cards */
+        .product-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .product-card:active {
+            transform: scale(0.98);
+        }
+
+        .card-main {
+            flex: 1;
+        }
+
+        .product-name {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .card-meta {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .stock-tag {
+            font-size: 0.7rem;
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .stock-tag.low {
+            background: #fffbeb;
+            color: var(--warning);
+            border-color: #fef3c7;
+        }
+
+        .stock-tag.danger {
+            background: #fef2f2;
+            color: var(--danger);
+            border-color: #fee2e2;
+        }
+
+        .priority-tag {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+        }
+
+        .priority-high {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .priority-medium {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .priority-low {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .card-side {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .product-weight {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .rebar-info {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .action-icon {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: #f8fafc;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .pour-section .product-card {
+            border-left: 4px solid var(--accent);
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .qty-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+        }
+
+        .btn-return {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: white;
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 440px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .form-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-item label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .form-item input,
+        .form-item select,
+        .form-item textarea {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            padding: 10px;
+            font-size: 1rem;
+            outline-color: var(--primary);
+        }
+
+        textarea#import-area {
+            min-height: 120px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            flex: 2;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        /* Alerts */
+        .alert-overlay {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .alert-box {
+            background: var(--danger);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 800;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translate(-50%, -100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 40px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="status-grid">
+                <div class="status-item quota-input">
+                    <label>目標重量</label>
+                    <input type="number" id="quota-goal" value="30000" min="100" step="100">
+                    <span class="unit">kg</span>
+                </div>
+                <div id="open-import" class="status-item action-btn">
+                    <label>データ一括取込</label>
+                    <span class="btn-icon">📁 Excel等から貼付</span>
+                </div>
+            </div>
+            <div class="summary-section">
+                <div class="summary-info">
+                    <div class="summary-item">
+                        <span class="label">合計重量:</span>
+                        <span id="total-weight" class="value">0</span>
+                        <span class="sub">/ <span id="goal-display">30000</span> kg</span>
+                    </div>
+                </div>
+                <div class="gauge-container">
+                    <div id="quota-gauge" class="gauge-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </header>
+
+        <main class="lists-container">
+            <!-- Daily Pour List (Top) -->
+            <section id="pour-section" class="list-wrapper pour-section">
+                <div class="section-header">
+                    <h2 class="section-title">当日打設リスト <span id="pour-count" class="badge">0</span></h2>
+                    <button class="btn-icon-only expand-toggle" onclick="toggleExpand('pour-section')" title="全画面表示">
+                        <span class="icon-expand">🗖</span>
+                    </button>
+                </div>
+                <div id="pour-list" class="card-list">
+                    <div class="empty-state">候補リストから追加してください</div>
+                </div>
+            </section>
+
+            <!-- Candidate List (Bottom) -->
+            <section id="candidate-section" class="list-wrapper candidate-section">
+                <div class="section-header">
+                    <h2 class="section-title">打設候補リスト <span id="candidate-count" class="badge">0</span></h2>
+                    <div class="header-actions">
+                        <button id="add-new-product" class="btn-text">+ 新規作成</button>
+                        <button class="btn-icon-only expand-toggle" onclick="toggleExpand('candidate-section')"
+                            title="全画面表示">
+                            <span class="icon-expand">🗖</span>
+                        </button>
+                    </div>
+                </div>
+                <div id="candidate-list" class="card-list">
+                    <div class="empty-state">製品データを取り込んでください</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Modals -->
+        <div id="import-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>データ一括取込</h3>
+                <p style="font-size: 0.8rem; margin-bottom: 12px; color: var(--text-secondary);">「名前 鉄筋 重量 優先度 在庫」を貼り付け
+                </p>
+                <textarea id="import-area" placeholder="例:&#10;Product A	4	2500	高	20"></textarea>
+                <div class="modal-actions">
+                    <button id="close-import" class="btn-secondary">キャンセル</button>
+                    <button id="submit-import" class="btn-primary">インポート</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="edit-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3 id="modal-title">製品情報の編集</h3>
+                <div class="form-grid">
+                    <div class="form-item"><label>製品名</label><input type="text" id="edit-name"></div>
+                    <div class="form-item"><label>必要鉄筋数 (本)</label><input type="number" id="edit-rebar"></div>
+                    <div class="form-item"><label>製品重量 (kg)</label><input type="number" id="edit-weight" step="1"></div>
+                    <div class="form-item"><label>鉄筋在庫数 (本)</label><input type="number" id="edit-stock"></div>
+                    <div class="form-item">
+                        <label>優先度</label>
+                        <select id="edit-priority">
+                            <option value="高">高</option>
+                            <option value="中" selected>中</option>
+                            <option value="低">低</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="close-edit" class="btn-secondary">キャンセル</button>
+                    <button id="save-product" class="btn-primary">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="alert-overlay" class="alert-overlay hidden">
+            <div class="alert-box">⚠️ <span id="alert-message">鉄筋不足です！</span></div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        let state = {
+            candidates: [],
+            pourList: [],
+            quota: 30000,
+            editingId: null,
+            expandedSection: null
+        };
+
+        const elements = {
+            candidateList: document.getElementById('candidate-list'),
+            pourList: document.getElementById('pour-list'),
+            quotaGoal: document.getElementById('quota-goal'),
+            totalWeight: document.getElementById('total-weight'),
+            goalDisplay: document.getElementById('goal-display'),
+            quotaGauge: document.getElementById('quota-gauge'),
+            importModal: document.getElementById('import-modal'),
+            importArea: document.getElementById('import-area'),
+            editModal: document.getElementById('edit-modal'),
+            editName: document.getElementById('edit-name'),
+            editRebar: document.getElementById('edit-rebar'),
+            editWeight: document.getElementById('edit-weight'),
+            editStock: document.getElementById('edit-stock'),
+            editPriority: document.getElementById('edit-priority'),
+            modalTitle: document.getElementById('modal-title'),
+            alertOverlay: document.getElementById('alert-overlay'),
+            alertMessage: document.getElementById('alert-message'),
+            candidateCount: document.getElementById('candidate-count'),
+            pourCount: document.getElementById('pour-count')
+        };
+
+        function init() {
+            setupEventListeners();
+            updateUI();
+        }
+
+        function setupEventListeners() {
+            elements.quotaGoal.addEventListener('input', (e) => {
+                state.quota = parseInt(e.target.value) || 100;
+                updateUI();
+            });
+            document.getElementById('open-import').onclick = () => elements.importModal.classList.remove('hidden');
+            document.getElementById('close-import').onclick = () => elements.importModal.classList.add('hidden');
+            document.getElementById('submit-import').onclick = handleImport;
+            document.getElementById('add-new-product').onclick = () => openEditModal(null);
+            document.getElementById('close-edit').onclick = () => elements.editModal.classList.add('hidden');
+            document.getElementById('save-product').onclick = saveProduct;
+        }
+
+        function handleImport() {
+            const text = elements.importArea.value.trim();
+            if (!text) return;
+            const lines = text.split('\n');
+            const newProducts = lines.map((line, index) => {
+                const parts = line.split(/[ \t]+/);
+                let weight = parseFloat(parts[2]) || 0;
+                if (weight > 0 && weight < 100) weight *= 1000; // t to kg auto-conv
+                return {
+                    id: Date.now() + index + Math.random(),
+                    name: parts[0] || `製品 ${index + 1}`,
+                    rebar: parseInt(parts[1]) || 0,
+                    weight: weight,
+                    priority: parts[3] || '中',
+                    stock: parseInt(parts[4]) || 50,
+                    count: 1
+                };
+            });
+            state.candidates = [...state.candidates, ...newProducts];
+            elements.importArea.value = '';
+            elements.importModal.classList.add('hidden');
+            updateUI();
+        }
+
+        function openEditModal(productId = null) {
+            state.editingId = productId;
+            if (productId) {
+                const p = state.candidates.find(item => item.id === productId);
+                if (!p) return;
+                elements.modalTitle.textContent = "製品情報の編集";
+                elements.editName.value = p.name;
+                elements.editRebar.value = p.rebar;
+                elements.editWeight.value = p.weight;
+                elements.editStock.value = p.stock;
+                elements.editPriority.value = p.priority;
+            } else {
+                elements.modalTitle.textContent = "新規製品の作成";
+                elements.editName.value = "";
+                elements.editRebar.value = 0;
+                elements.editWeight.value = "";
+                elements.editStock.value = 50;
+                elements.editPriority.value = "中";
+            }
+            elements.editModal.classList.remove('hidden');
+        }
+
+        function saveProduct() {
+            const data = {
+                name: elements.editName.value || "無名製品",
+                rebar: parseInt(elements.editRebar.value) || 0,
+                weight: parseInt(elements.editWeight.value) || 0,
+                stock: parseInt(elements.editStock.value) || 0,
+                priority: elements.editPriority.value
+            };
+            if (state.editingId) {
+                const index = state.candidates.findIndex(p => p.id === state.editingId);
+                if (index !== -1) state.candidates[index] = { ...state.candidates[index], ...data };
+            } else {
+                state.candidates.push({ id: Date.now(), ...data, count: 1 });
+            }
+            elements.editModal.classList.add('hidden');
+            updateUI();
+        }
+
+        function deleteProduct(productId) {
+            if (confirm("この製品データを削除しますか？")) {
+                state.candidates = state.candidates.filter(p => p.id !== productId);
+                updateUI();
+            }
+        }
+
+        function moveToPour(productId) {
+            const index = state.candidates.findIndex(p => p.id === productId);
+            if (index === -1) return;
+            const p = state.candidates[index];
+            if (p.rebar > p.stock) { showAlert(`「${p.name}」の鉄筋在庫が不足しています！`); return; }
+            state.pourList.push({ ...p, count: 1 });
+            state.candidates.splice(index, 1);
+            updateUI();
+        }
+
+        function moveToCandidate(productId) {
+            const index = state.pourList.findIndex(p => p.id === productId);
+            if (index === -1) return;
+            state.candidates.push({ ...state.pourList[index], count: 1 });
+            state.pourList.splice(index, 1);
+            updateUI();
+        }
+
+        function updateQuantity(productId, delta) {
+            const p = state.pourList.find(item => item.id === productId);
+            if (!p) return;
+            const next = p.count + delta;
+            if (next < 1) return;
+            if (delta > 0 && (next * p.rebar) > p.stock) { showAlert(`「${p.name}」の鉄筋在庫が不足しています！`); return; }
+            p.count = next;
+            updateUI();
+        }
+
+        function toggleExpand(sectionId) {
+            const current = state.expandedSection;
+            const otherId = sectionId === 'pour-section' ? 'candidate-section' : 'pour-section';
+            const section = document.getElementById(sectionId);
+            const other = document.getElementById(otherId);
+            const btn = section.querySelector('.expand-toggle');
+
+            if (current === sectionId) {
+                state.expandedSection = null;
+                section.classList.remove('expanded');
+                other.classList.remove('shrunk');
+                btn.classList.remove('active');
+                btn.querySelector('.icon-expand').textContent = '🗖';
+            } else {
+                state.expandedSection = sectionId;
+                section.classList.add('expanded');
+                section.classList.remove('shrunk');
+                other.classList.add('shrunk');
+                other.classList.remove('expanded');
+                document.querySelectorAll('.expand-toggle').forEach(b => {
+                    b.classList.remove('active');
+                    b.querySelector('.icon-expand').textContent = '🗖';
+                });
+                btn.classList.add('active');
+                btn.querySelector('.icon-expand').textContent = '🗗';
+            }
+        }
+
+        function showAlert(msg) {
+            elements.alertMessage.textContent = msg;
+            elements.alertOverlay.classList.remove('hidden');
+            setTimeout(() => elements.alertOverlay.classList.add('hidden'), 2500);
+        }
+
+        function updateUI() {
+            renderList('candidate', state.candidates);
+            renderList('pour', state.pourList);
+            const total = state.pourList.reduce((sum, p) => sum + (p.weight * p.count), 0);
+            elements.totalWeight.textContent = total.toLocaleString();
+            elements.goalDisplay.textContent = state.quota.toLocaleString();
+            elements.candidateCount.textContent = state.candidates.length;
+            elements.pourCount.textContent = state.pourList.reduce((sum, p) => sum + p.count, 0);
+            const per = Math.min((total / state.quota) * 100, 100);
+            elements.quotaGauge.style.width = `${per}%`;
+            elements.quotaGauge.className = 'gauge-fill' + (total >= state.quota ? ' goal-reached' : '');
+        }
+
+        function renderList(type, list) {
+            const container = (type === 'candidate') ? elements.candidateList : elements.pourList;
+            if (list.length === 0) {
+                container.innerHTML = `<div class="empty-state">${type === 'candidate' ? '製品データを取り込んでください' : '候補リストから追加してください'}</div>`;
+                return;
+            }
+            container.innerHTML = '';
+            list.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                if (type === 'candidate') {
+                    card.onclick = () => moveToPour(p.id);
+                    const pClass = `priority-${p.priority === '高' ? 'high' : p.priority === '中' ? 'medium' : 'low'}`;
+                    card.innerHTML = `
+                        <div class="card-main">
+                            <div class="product-name">${p.name}</div>
+                            <div class="card-meta"><span class="priority-tag ${pClass}">${p.priority}</span><span class="stock-tag">鉄筋在庫: ${p.stock}本</span></div>
+                            <div class="card-actions">
+                                <button class="action-icon" onclick="event.stopPropagation(); openEditModal(${p.id})">編集</button>
+                                <button class="action-icon" onclick="event.stopPropagation(); deleteProduct(${p.id})">削除</button>
+                            </div>
+                        </div>
+                        <div class="card-side"><div class="product-weight">${p.weight.toLocaleString()}kg</div></div>
+                    `;
+                } else {
+                    const rem = p.stock - (p.rebar * p.count);
+                    const sClass = rem < 0 ? 'danger' : rem <= (p.rebar * 2) ? 'low' : '';
+                    card.innerHTML = `
+                        <div class="card-main">
+                            <div class="product-name">${p.name}</div>
+                            <div class="card-meta"><span class="stock-tag ${sClass}">鉄筋残数: ${rem}本</span></div>
+                        </div>
+                        <div class="card-side">
+                            <div class="product-weight">${(p.weight * p.count).toLocaleString()}kg</div>
+                            <div class="quantity-controls">
+                                <button class="qty-btn" onclick="updateQuantity(${p.id}, -1)">-</button>
+                                <span class="qty-val">✖️${p.count}</span>
+                                <button class="qty-btn" onclick="updateQuantity(${p.id}, 1)">+</button>
+                            </div>
+                            <button class="btn-return" onclick="moveToCandidate(${p.id})">候補に戻す</button>
+                        </div>
+                    `;
+                }
+                container.appendChild(card);
+            });
+        }
+
+        window.updateQuantity = updateQuantity;
+        window.moveToCandidate = moveToCandidate;
+        window.openEditModal = openEditModal;
+        window.deleteProduct = deleteProduct;
+        window.toggleExpand = toggleExpand;
+        init();
+    </script>
+</body>
+
+</html>
