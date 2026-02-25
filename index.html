@@ -665,12 +665,50 @@
     <script>
         // --- State Management ---
         let state = {
-            candidates: [],
+            candidates: [
+                { id: 1, name: "UNVS 道路横断用 300×300×2000", rebar: 2, weight: 412, priority: "高", stock: 50, count: 1 },
+                { id: 2, name: "UNVS 道路横断用 300×400×2000", rebar: 1, weight: 492, priority: "低", stock: 50, count: 1 },
+                { id: 3, name: "UNVS 道路横断用 300×500×2000", rebar: 1, weight: 570, priority: "高", stock: 50, count: 1 },
+                { id: 4, name: "UNVS 道路横断用 300×600×2000", rebar: 1, weight: 650, priority: "高", stock: 50, count: 1 },
+                { id: 5, name: "皿型側溝 標準 300×300×2000", rebar: 1, weight: 484, priority: "中", stock: 50, count: 1 },
+                { id: 6, name: "標準型U形 240×2000", rebar: 2, weight: 184, priority: "高", stock: 50, count: 1 },
+                { id: 7, name: "標準型U形 300×2000", rebar: 2, weight: 267, priority: "高", stock: 50, count: 1 },
+                { id: 8, name: "落ちふた式U形側溝 本体-3種 300A×2000", rebar: 2, weight: 419, priority: "高", stock: 50, count: 1 },
+                { id: 9, name: "落ちふた式U形側溝 本体-3種 300C×2000", rebar: 1, weight: 585, priority: "高", stock: 50, count: 1 },
+                { id: 10, name: "(スラグ入) 歩車道BKA 片R 2m", rebar: 8, weight: 145, priority: "高", stock: 50, count: 1 },
+                { id: 11, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 標準 2M", rebar: 4, weight: 350, priority: "高", stock: 50, count: 1 },
+                { id: 12, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 標準 1M", rebar: 2, weight: 175, priority: "中", stock: 50, count: 1 }
+            ],
             pourList: [],
             quota: 30000,
             editingId: null,
             expandedSection: null
         };
+
+        const STORAGE_KEY = 'concrete_app_state';
+
+        function saveState() {
+            const dataToSave = {
+                candidates: state.candidates,
+                pourList: state.pourList,
+                quota: state.quota
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state.candidates = parsed.candidates || [];
+                    state.pourList = parsed.pourList || [];
+                    state.quota = parsed.quota || 30000;
+                } catch (e) {
+                    console.error("Failed to load state:", e);
+                }
+            }
+        }
 
         const elements = {
             candidateList: document.getElementById('candidate-list'),
@@ -695,6 +733,7 @@
         };
 
         function init() {
+            loadState();
             setupEventListeners();
             updateUI();
         }
@@ -702,6 +741,7 @@
         function setupEventListeners() {
             elements.quotaGoal.addEventListener('input', (e) => {
                 state.quota = parseInt(e.target.value) || 100;
+                saveState();
                 updateUI();
             });
             document.getElementById('open-import').onclick = () => elements.importModal.classList.remove('hidden');
@@ -733,6 +773,7 @@
             state.candidates = [...state.candidates, ...newProducts];
             elements.importArea.value = '';
             elements.importModal.classList.add('hidden');
+            saveState();
             updateUI();
         }
 
@@ -773,12 +814,14 @@
                 state.candidates.push({ id: Date.now(), ...data, count: 1 });
             }
             elements.editModal.classList.add('hidden');
+            saveState();
             updateUI();
         }
 
         function deleteProduct(productId) {
             if (confirm("この製品データを削除しますか？")) {
                 state.candidates = state.candidates.filter(p => p.id !== productId);
+                saveState();
                 updateUI();
             }
         }
@@ -790,6 +833,7 @@
             if (p.rebar > p.stock) { showAlert(`「${p.name}」の鉄筋在庫が不足しています！`); return; }
             state.pourList.push({ ...p, count: 1 });
             state.candidates.splice(index, 1);
+            saveState();
             updateUI();
         }
 
@@ -798,6 +842,7 @@
             if (index === -1) return;
             state.candidates.push({ ...state.pourList[index], count: 1 });
             state.pourList.splice(index, 1);
+            saveState();
             updateUI();
         }
 
@@ -808,6 +853,7 @@
             if (next < 1) return;
             if (delta > 0 && (next * p.rebar) > p.stock) { showAlert(`「${p.name}」の鉄筋在庫が不足しています！`); return; }
             p.count = next;
+            saveState();
             updateUI();
         }
 
