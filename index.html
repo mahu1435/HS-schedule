@@ -150,6 +150,48 @@
             background: var(--accent);
         }
 
+        /* Product Card Added State */
+        .product-card.added {
+            opacity: 0.6;
+            background: #f1f5f9;
+            pointer-events: none;
+        }
+
+        .added-badge {
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 800;
+            border: 1px solid #86efac;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 0;
+        }
+
+        .form-checkbox input {
+            width: 18px;
+            height: 18px;
+        }
+
+        .tracking-fields {
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px dashed var(--border-color);
+            margin-top: 8px;
+        }
+
+        .hidden-tracking {
+            display: none !important;
+        }
+
         /* Lists */
         .lists-container {
             flex: 1;
@@ -269,13 +311,15 @@
         .product-card {
             background: #ffffff;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
+            border-left: 4px solid #cbd5e1;
+            /* Neutral grey to reduce eye strain */
+            border-radius: 6px;
+            padding: 6px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             transition: transform 0.1s, box-shadow 0.1s;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         }
 
         .product-card:active {
@@ -287,10 +331,11 @@
         }
 
         .product-name {
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
             color: var(--text-primary);
+            line-height: 1.2;
         }
 
         .card-meta {
@@ -322,10 +367,13 @@
         }
 
         .priority-tag {
-            font-size: 0.65rem;
-            padding: 2px 6px;
-            border-radius: 4px;
+            font-size: 0.6rem;
+            padding: 1px 4px;
+            border-radius: 3px;
             font-weight: 800;
+            margin-right: 4px;
+            display: inline-block;
+            vertical-align: middle;
         }
 
         .priority-high {
@@ -348,12 +396,12 @@
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 4px;
+            gap: 2px;
         }
 
         .product-weight {
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: var(--primary);
         }
 
@@ -379,17 +427,13 @@
             cursor: pointer;
         }
 
-        .pour-section .product-card {
-            border-left: 4px solid var(--accent);
-        }
-
         .quantity-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             background: #f8fafc;
-            padding: 6px;
-            border-radius: 8px;
+            padding: 4px;
+            border-radius: 6px;
             border: 1px solid var(--border-color);
         }
 
@@ -397,11 +441,11 @@
             background: white;
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            width: 32px;
-            height: 32px;
-            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
             font-weight: 800;
-            font-size: 1.2rem;
+            font-size: 1rem;
             box-shadow: var(--shadow-sm);
             cursor: pointer;
         }
@@ -638,12 +682,12 @@
             <div class="status-grid">
                 <div class="status-item quota-input">
                     <label>目標重量</label>
-                    <input type="number" id="quota-goal" value="30000" min="100" step="100">
+                    <input type="number" id="quota-goal" value="26000" min="100" step="100">
                     <span class="unit">kg</span>
                 </div>
-                <div id="open-import" class="status-item action-btn">
-                    <label>データ一括取込</label>
-                    <span class="btn-icon">📁 Excel等から貼付</span>
+                <div id="open-candidate-list" class="status-item action-btn">
+                    <label>追加</label>
+                    <span class="btn-icon">製品リスト</span>
                 </div>
             </div>
             <div class="summary-section">
@@ -651,7 +695,7 @@
                     <div class="summary-item">
                         <span class="label">合計重量:</span>
                         <span id="total-weight" class="value">0</span>
-                        <span class="sub">/ <span id="goal-display">30000</span> kg</span>
+                        <span class="sub">/ <span id="goal-display">26000</span> kg</span>
                     </div>
                 </div>
                 <div class="gauge-container">
@@ -672,18 +716,26 @@
             </section>
         </main>
 
-        <button id="fab-add" class="fab-add">＋</button>
+        </main>
 
         <!-- Modals -->
         <div id="candidate-modal" class="modal modal-full hidden">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2 class="section-title">製品の選択 <span id="candidate-count" class="badge">0</span></h2>
-                    <button id="close-candidate-modal" class="btn-secondary"
-                        style="flex: 0; padding: 8px 16px;">閉じる</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="modal-add-new" class="btn-text">+ 新規登録</button>
+                        <button id="close-candidate-modal" class="btn-secondary" style="padding: 8px 16px;">閉じる</button>
+                    </div>
                 </div>
-                <div class="search-container">
-                    <input type="text" id="search-input" placeholder="製品名で検索...">
+                <div class="search-container" style="display: flex; gap: 8px; align-items: center;">
+                    <input type="text" id="search-input" placeholder="製品名で検索..." style="flex: 2;">
+                    <select id="sort-select"
+                        style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                        <option value="default">標準順</option>
+                        <option value="weight">重量順 ↓</option>
+                        <option value="priority">優先度順 ↓</option>
+                    </select>
                 </div>
                 <div id="candidate-list" class="card-list">
                     <div class="empty-state">製品データがありません</div>
@@ -692,27 +744,13 @@
         </div>
 
         <!-- Modals -->
-        <div id="import-modal" class="modal hidden">
-            <div class="modal-content">
-                <h3>データ一括取込</h3>
-                <p style="font-size: 0.8rem; margin-bottom: 12px; color: var(--text-secondary);">「名前 鉄筋 重量 優先度 在庫」を貼り付け
-                </p>
-                <textarea id="import-area" placeholder="例:&#10;Product A	4	2500	高	20"></textarea>
-                <div class="modal-actions">
-                    <button id="close-import" class="btn-secondary">キャンセル</button>
-                    <button id="submit-import" class="btn-primary">インポート</button>
-                </div>
-            </div>
-        </div>
 
         <div id="edit-modal" class="modal hidden">
             <div class="modal-content">
                 <h3 id="modal-title">製品情報の編集</h3>
                 <div class="form-grid">
                     <div class="form-item"><label>製品名</label><input type="text" id="edit-name"></div>
-                    <div class="form-item"><label>必要鉄筋数 (本)</label><input type="number" id="edit-rebar"></div>
                     <div class="form-item"><label>製品重量 (kg)</label><input type="number" id="edit-weight" step="1"></div>
-                    <div class="form-item"><label>鉄筋在庫数 (本)</label><input type="number" id="edit-stock"></div>
                     <div class="form-item">
                         <label>優先度</label>
                         <select id="edit-priority">
@@ -720,6 +758,16 @@
                             <option value="中" selected>中</option>
                             <option value="低">低</option>
                         </select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-checkbox">
+                            <input type="checkbox" id="edit-tracking"> 鉄筋在庫管理を有効にする
+                        </label>
+                    </div>
+                    <div id="tracking-settings" class="tracking-fields hidden-tracking">
+                        <div class="form-item" style="margin-bottom: 8px;"><label>必要鉄筋数 (本)</label><input type="number"
+                                id="edit-rebar"></div>
+                        <div class="form-item"><label>鉄筋在庫数 (本)</label><input type="number" id="edit-stock"></div>
                     </div>
                 </div>
                 <div class="modal-actions">
@@ -801,10 +849,11 @@
                 { id: 61, name: "地先境界BKC 面取り9c", rebar: 2, weight: 31, priority: "高", stock: 50, count: 1 }
             ],
             pourList: [],
-            quota: 30000,
+            quota: 26000,
             editingId: null,
             expandedSection: null,
-            searchQuery: ""
+            searchQuery: "",
+            sortMode: "default"
         };
 
         const STORAGE_KEY = 'concrete_app_state';
@@ -825,7 +874,7 @@
                     const parsed = JSON.parse(saved);
                     // Only load pourList and quota to keep candidate list fresh
                     state.pourList = parsed.pourList || [];
-                    state.quota = parsed.quota || 30000;
+                    state.quota = parsed.quota || 26000;
                 } catch (e) {
                     console.error("Failed to load state:", e);
                 }
@@ -839,15 +888,16 @@
             totalWeight: document.getElementById('total-weight'),
             goalDisplay: document.getElementById('goal-display'),
             quotaGauge: document.getElementById('quota-gauge'),
-            importModal: document.getElementById('import-modal'),
-            importArea: document.getElementById('import-area'),
             editModal: document.getElementById('edit-modal'),
             candidateModal: document.getElementById('candidate-modal'),
+            sortSelect: document.getElementById('sort-select'),
             editName: document.getElementById('edit-name'),
             editRebar: document.getElementById('edit-rebar'),
             editWeight: document.getElementById('edit-weight'),
             editStock: document.getElementById('edit-stock'),
             editPriority: document.getElementById('edit-priority'),
+            editTracking: document.getElementById('edit-tracking'),
+            trackingSettings: document.getElementById('tracking-settings'),
             modalTitle: document.getElementById('modal-title'),
             alertOverlay: document.getElementById('alert-overlay'),
             alertMessage: document.getElementById('alert-message')
@@ -865,15 +915,22 @@
                 saveState();
                 updateUI();
             });
-            document.getElementById('open-import').onclick = () => elements.importModal.classList.remove('hidden');
-            document.getElementById('close-import').onclick = () => elements.importModal.classList.add('hidden');
-            document.getElementById('submit-import').onclick = handleImport;
 
-            document.getElementById('fab-add').onclick = () => {
+            document.getElementById('open-candidate-list').onclick = () => {
                 elements.candidateModal.classList.remove('hidden');
                 updateUI();
             };
             document.getElementById('close-candidate-modal').onclick = () => elements.candidateModal.classList.add('hidden');
+            document.getElementById('modal-add-new').onclick = () => openEditModal(null);
+
+            elements.sortSelect.onchange = (e) => {
+                state.sortMode = e.target.value;
+                updateUI();
+            };
+
+            elements.editTracking.onchange = (e) => {
+                elements.trackingSettings.classList.toggle('hidden-tracking', !e.target.checked);
+            };
 
             document.getElementById('search-input').oninput = (e) => {
                 state.searchQuery = e.target.value.toLowerCase();
@@ -884,31 +941,6 @@
             document.getElementById('save-product').onclick = saveProduct;
         }
 
-        function handleImport() {
-            const text = elements.importArea.value.trim();
-            if (!text) return;
-            const lines = text.split('\n');
-            const newProducts = lines.map((line, index) => {
-                const parts = line.split(/[ \t]+/);
-                let weight = parseFloat(parts[2]) || 0;
-                if (weight > 0 && weight < 100) weight *= 1000; // t to kg auto-conv
-                return {
-                    id: Date.now() + index + Math.random(),
-                    name: parts[0] || `製品 ${index + 1}`,
-                    rebar: parseInt(parts[1]) || 0,
-                    weight: weight,
-                    priority: parts[3] || '中',
-                    stock: parseInt(parts[4]) || 50,
-                    count: 1
-                };
-            });
-            state.candidates = [...state.candidates, ...newProducts];
-            elements.importArea.value = '';
-            elements.importModal.classList.add('hidden');
-            saveState();
-            updateUI();
-        }
-
         function openEditModal(productId = null) {
             state.editingId = productId;
             if (productId) {
@@ -916,10 +948,11 @@
                 if (!p) return;
                 elements.modalTitle.textContent = "製品情報の編集";
                 elements.editName.value = p.name;
-                elements.editRebar.value = p.rebar;
+                elements.editRebar.value = p.rebar || 0;
                 elements.editWeight.value = p.weight;
-                elements.editStock.value = p.stock;
-                elements.editPriority.value = p.priority;
+                elements.editStock.value = p.stock || 50;
+                elements.editPriority.value = p.priority || "中";
+                elements.editTracking.checked = !!p.trackingEnabled;
             } else {
                 elements.modalTitle.textContent = "新規製品の作成";
                 elements.editName.value = "";
@@ -927,7 +960,9 @@
                 elements.editWeight.value = "";
                 elements.editStock.value = 50;
                 elements.editPriority.value = "中";
+                elements.editTracking.checked = false;
             }
+            elements.trackingSettings.classList.toggle('hidden-tracking', !elements.editTracking.checked);
             elements.editModal.classList.remove('hidden');
         }
 
@@ -937,7 +972,8 @@
                 rebar: parseInt(elements.editRebar.value) || 0,
                 weight: parseInt(elements.editWeight.value) || 0,
                 stock: parseInt(elements.editStock.value) || 0,
-                priority: elements.editPriority.value
+                priority: elements.editPriority.value,
+                trackingEnabled: elements.editTracking.checked
             };
             if (state.editingId) {
                 const index = state.candidates.findIndex(p => p.id === state.editingId);
@@ -1021,12 +1057,32 @@
         }
 
         function updateUI() {
-            const filteredCandidates = state.candidates.filter(p =>
+            let filteredCandidates = state.candidates.filter(p =>
                 p.name.toLowerCase().includes(state.searchQuery)
             );
+
+            // Apply candidate list sorting
+            if (state.sortMode === 'weight') {
+                filteredCandidates.sort((a, b) => b.weight - a.weight);
+            } else if (state.sortMode === 'priority') {
+                const pRank = { '高': 3, '中': 2, '低': 1 };
+                filteredCandidates.sort((a, b) => (pRank[b.priority] || 0) - (pRank[a.priority] || 0));
+            }
+            // 'default' uses the state.candidates order
+
             renderList('candidate', filteredCandidates);
 
-            renderList('pour', state.pourList);
+            // Sort pourList based on the order in the master candidate list
+            const sortedPourList = [...state.pourList].sort((a, b) => {
+                const indexA = state.candidates.findIndex(c => c.id === a.originalId);
+                const indexB = state.candidates.findIndex(c => c.id === b.originalId);
+                // If not found in candidates (shouldn't happen), push to the end
+                const finalIndexA = indexA === -1 ? 9999 : indexA;
+                const finalIndexB = indexB === -1 ? 9999 : indexB;
+                return finalIndexA - finalIndexB;
+            });
+
+            renderList('pour', sortedPourList);
             const total = state.pourList.reduce((sum, p) => sum + (p.weight * p.count), 0);
             elements.totalWeight.textContent = total.toLocaleString();
             elements.goalDisplay.textContent = state.quota.toLocaleString();
@@ -1051,14 +1107,27 @@
             container.innerHTML = '';
             list.forEach(p => {
                 const card = document.createElement('div');
-                card.className = 'product-card';
+                const pri = p.priority || '中';
+                const pClass = `priority-${pri === '高' ? 'high' : pri === '中' ? 'medium' : 'low'}`;
+
+                card.className = `product-card`;
+
                 if (type === 'candidate') {
+                    const isAdded = state.pourList.some(item => item.originalId === p.id);
+                    if (isAdded) card.classList.add('added');
+
                     card.onclick = () => moveToPour(p.id);
-                    const pClass = `priority-${p.priority === '高' ? 'high' : p.priority === '中' ? 'medium' : 'low'}`;
+                    const feedback = isAdded ? '<span class="added-badge">✅ 追加済み</span>' : '';
+
                     card.innerHTML = `
                         <div class="card-main">
-                            <div class="product-name">${p.name}</div>
-                            <div class="card-meta"><span class="priority-tag ${pClass}">${p.priority}</span><span class="stock-tag">鉄筋在庫: ${p.stock}本</span></div>
+                            <div class="product-name">
+                                <span class="priority-tag ${pClass}">${pri}</span>
+                                ${p.name} ${feedback}
+                            </div>
+                            <div class="card-meta">
+                                ${p.trackingEnabled ? `<span class="stock-tag">鉄筋在庫: ${p.stock}本</span>` : ''}
+                            </div>
                             <div class="card-actions">
                                 <button class="action-icon" onclick="event.stopPropagation(); openEditModal(${p.id})">編集</button>
                                 <button class="action-icon" onclick="event.stopPropagation(); deleteProduct(${p.id})">削除</button>
@@ -1067,12 +1136,19 @@
                         <div class="card-side"><div class="product-weight">${p.weight.toLocaleString()}kg</div></div>
                     `;
                 } else {
-                    const rem = p.stock - (p.rebar * p.count);
-                    const sClass = rem < 0 ? 'danger' : rem <= (p.rebar * 2) ? 'low' : '';
+                    const trackingHtml = p.trackingEnabled ? (() => {
+                        const rem = p.stock - (p.rebar * p.count);
+                        const sClass = rem < 0 ? 'danger' : rem <= (p.rebar * 2) ? 'low' : '';
+                        return `<div class="card-meta"><span class="stock-tag ${sClass}">鉄筋残数: ${rem}本</span></div>`;
+                    })() : '';
+
                     card.innerHTML = `
                         <div class="card-main">
-                            <div class="product-name">${p.name}</div>
-                            <div class="card-meta"><span class="stock-tag ${sClass}">鉄筋残数: ${rem}本</span></div>
+                            <div class="product-name">
+                                <span class="priority-tag ${pClass}">${pri}</span>
+                                ${p.name}
+                            </div>
+                            ${trackingHtml}
                         </div>
                         <div class="card-side">
                             <div class="product-weight">${(p.weight * p.count).toLocaleString()}kg</div>
