@@ -51,14 +51,34 @@
         .dashboard-header {
             background: #ffffff;
             border-bottom: 1px solid var(--border-color);
-            padding: 16px;
+            padding: 12px 16px 16px;
             z-index: 10;
             box-shadow: var(--shadow-sm);
         }
 
+        .top-date-banner {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .top-date-banner::before {
+            content: '📅';
+            font-size: 0.9rem;
+        }
+
         .status-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
+            /* Updated to 3 columns */
             gap: 12px;
             margin-bottom: 16px;
         }
@@ -672,6 +692,67 @@
             border-radius: 8px;
             font-size: 1rem;
         }
+
+        #history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+            font-size: 0.85rem;
+        }
+
+        #history-table th,
+        #history-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            text-align: left;
+        }
+
+        #history-table th {
+            background: #f8fafc;
+            font-weight: 800;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: #eff6ff;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+        }
+
+        .stat-card label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .value {
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: #1e3a8a;
+        }
+
+        .stock-warning {
+            color: var(--danger);
+            font-weight: 800;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stock-warning::before {
+            content: '⚠️';
+        }
     </style>
 </head>
 
@@ -679,11 +760,14 @@
     <div class="app-container">
         <!-- Dashboard Header -->
         <header class="dashboard-header">
+            <div id="top-date-display" class="top-date-banner">----年--月--日</div>
             <div class="status-grid">
                 <div class="status-item quota-input">
-                    <label>目標重量</label>
-                    <input type="number" id="quota-goal" value="26000" min="100" step="100">
-                    <span class="unit">kg</span>
+                    <label>目標重量 (kg)</label>
+                    <input type="number" id="quota-goal" value="26000" min="100" step="1000">
+                </div>
+                <div class="status-item action-btn" id="open-history-btn">
+                    <span class="btn-icon">📈 実績履歴</span>
                 </div>
                 <div id="open-candidate-list" class="status-item action-btn">
                     <label>追加</label>
@@ -850,6 +934,8 @@
             ],
             pourList: [],
             quota: 26000,
+            history: [],
+            lastProcessedDate: "",
             editingId: null,
             expandedSection: null,
             searchQuery: "",
@@ -860,9 +946,11 @@
 
         function saveState() {
             const dataToSave = {
-                // candidates: state.candidates, // Standard list is hardcoded, but we could save custom ones if needed
+                candidates: state.candidates,
                 pourList: state.pourList,
-                quota: state.quota
+                quota: state.quota,
+                history: state.history,
+                lastProcessedDate: state.lastProcessedDate
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
         }
@@ -872,9 +960,13 @@
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
-                    // Only load pourList and quota to keep candidate list fresh
+                    if (parsed.candidates && parsed.candidates.length > 0) {
+                        state.candidates = parsed.candidates;
+                    }
                     state.pourList = parsed.pourList || [];
                     state.quota = parsed.quota || 26000;
+                    state.history = parsed.history || [];
+                    state.lastProcessedDate = parsed.lastProcessedDate || "";
                 } catch (e) {
                     console.error("Failed to load state:", e);
                 }
@@ -900,13 +992,22 @@
             trackingSettings: document.getElementById('tracking-settings'),
             modalTitle: document.getElementById('modal-title'),
             alertOverlay: document.getElementById('alert-overlay'),
-            alertMessage: document.getElementById('alert-message')
+            alertMessage: document.getElementById('alert-message'),
+            dateDisplay: document.getElementById('top-date-display')
         };
 
         function init() {
             loadState();
+            checkDailyConsumption();
+            updateDateDisplay();
             setupEventListeners();
             updateUI();
+        }
+
+        function updateDateDisplay() {
+            if (!state.lastProcessedDate) return;
+            const [y, m, d] = state.lastProcessedDate.split('-');
+            elements.dateDisplay.textContent = `${y}年${m}月${d}日`;
         }
 
         function setupEventListeners() {
@@ -937,8 +1038,33 @@
                 updateUI();
             };
 
+            document.getElementById('close-history').onclick = () => document.getElementById('history-modal').classList.add('hidden');
+            document.getElementById('open-history-btn').onclick = openHistory;
             document.getElementById('close-edit').onclick = () => elements.editModal.classList.add('hidden');
             document.getElementById('save-product').onclick = saveProduct;
+        }
+
+        function openHistory() {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+
+            let totalWeight = 0;
+            state.history.forEach(h => {
+                totalWeight += h.totalWeight;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${h.date}</td>
+                    <td>${h.totalWeight.toLocaleString()}kg</td>
+                    <td>${h.totalCount}個</td>
+                `;
+                list.appendChild(tr);
+            });
+
+            document.getElementById('stats-total-weight').textContent = `${totalWeight.toLocaleString()}kg`;
+            const avg = state.history.length > 0 ? Math.round(totalWeight / state.history.length) : 0;
+            document.getElementById('stats-avg-weight').textContent = `${avg.toLocaleString()}kg`;
+
+            document.getElementById('history-modal').classList.remove('hidden');
         }
 
         function openEditModal(productId = null) {
@@ -1056,6 +1182,38 @@
             setTimeout(() => elements.alertOverlay.classList.add('hidden'), 2500);
         }
 
+        function checkDailyConsumption() {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+
+            if (state.lastProcessedDate && state.lastProcessedDate !== todayStr) {
+                if (state.pourList.length > 0) {
+                    const totalWeight = state.pourList.reduce((sum, p) => sum + (p.weight * p.count), 0);
+                    const totalCount = state.pourList.reduce((sum, p) => sum + p.count, 0);
+
+                    state.history.push({
+                        date: state.lastProcessedDate,
+                        totalWeight: totalWeight,
+                        totalCount: totalCount,
+                        details: state.pourList.map(p => ({ name: p.name, count: p.count }))
+                    });
+
+                    // Update stocks
+                    state.pourList.forEach(item => {
+                        const target = state.candidates.find(c => c.id === item.originalId);
+                        if (target && target.trackingEnabled) {
+                            target.stock -= (target.rebar * item.count);
+                        }
+                    });
+
+                    showAlert(`日付が変わりました（${todayStr}）。\n実績を記録し、鉄筋在庫を更新しました。`);
+                }
+            }
+            state.lastProcessedDate = todayStr;
+            updateDateDisplay();
+            saveState();
+        }
+
         function updateUI() {
             let filteredCandidates = state.candidates.filter(p =>
                 p.name.toLowerCase().includes(state.searchQuery)
@@ -1118,6 +1276,7 @@
 
                     card.onclick = () => moveToPour(p.id);
                     const feedback = isAdded ? '<span class="added-badge">✅ 追加済み</span>' : '';
+                    const lowStockAlert = (p.trackingEnabled && p.stock <= 1) ? `<div class="stock-warning">鉄筋残数が残りわずかです</div>` : '';
 
                     card.innerHTML = `
                         <div class="card-main">
@@ -1127,6 +1286,7 @@
                             </div>
                             <div class="card-meta">
                                 ${p.trackingEnabled ? `<span class="stock-tag">鉄筋在庫: ${p.stock}本</span>` : ''}
+                                ${lowStockAlert}
                             </div>
                             <div class="card-actions">
                                 <button class="action-icon" onclick="event.stopPropagation(); openEditModal(${p.id})">編集</button>
@@ -1139,7 +1299,12 @@
                     const trackingHtml = p.trackingEnabled ? (() => {
                         const rem = p.stock - (p.rebar * p.count);
                         const sClass = rem < 0 ? 'danger' : rem <= (p.rebar * 2) ? 'low' : '';
-                        return `<div class="card-meta"><span class="stock-tag ${sClass}">鉄筋残数: ${rem}本</span></div>`;
+                        const lowStockAlert = p.stock <= 1 ? `<div class="stock-warning">鉄筋残数が残りわずかです</div>` : '';
+                        return `
+                            <div class="card-meta">
+                                <span class="stock-tag ${sClass}">鉄筋残数: ${rem}本</span>
+                                ${lowStockAlert}
+                            </div>`;
                     })() : '';
 
                     card.innerHTML = `
