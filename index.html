@@ -77,8 +77,8 @@
 
         .status-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            /* Updated to 3 columns */
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            /* Updated to 4 columns */
             gap: 12px;
             margin-bottom: 16px;
         }
@@ -497,6 +497,11 @@
             padding: 20px;
         }
 
+        #edit-modal {
+            z-index: 200;
+            /* Higher than candidate modal */
+        }
+
         .hidden {
             display: none !important;
         }
@@ -753,6 +758,216 @@
         .stock-warning::before {
             content: '⚠️';
         }
+
+        /* Calendar Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: var(--border-color);
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 50px;
+            padding: 4px;
+            position: relative;
+        }
+
+        .calendar-header-day {
+            background: #f1f5f9;
+            text-align: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 8px 0;
+        }
+
+        .calendar-day.weekend {
+            background: #fef2f2;
+        }
+
+        .day-num {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+        }
+
+        .month-header {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin: 20px 0 10px;
+            padding-left: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .calendar-bar {
+            height: 18px;
+            background: var(--primary);
+            color: white;
+            font-size: 0.65rem;
+            margin-top: 2px;
+            padding: 0 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 5;
+            width: calc(100% + 2px);
+            /* Overlap to connect */
+            margin-left: -1px;
+        }
+
+        .calendar-bar.start-day {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .calendar-bar.end-day {
+            background: var(--primary);
+            clip-path: polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%);
+            padding-right: 10px;
+            width: 100%;
+        }
+
+        .calendar-bar.start-day.end-day {
+            border-top-left-radius: 4px;
+            border-bottom-left-radius: 4px;
+            clip-path: polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%);
+        }
+
+        .calendar-bar.moved {
+            background: #059669;
+        }
+
+        .calendar-bar.last-day {
+            background: var(--danger) !important;
+        }
+
+        .calendar-day.holiday {
+            background: #fef3c7;
+        }
+
+        .calendar-day.holiday .day-num {
+            color: #d97706;
+        }
+
+        .holiday-name {
+            font-size: 0.55rem;
+            color: #d97706;
+            font-weight: 700;
+            line-height: 1;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .calendar-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 20;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .calendar-controls-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #calendar-view {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        /* Product Selector Panel */
+        .cal-product-panel {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .cal-product-panel.show {
+            display: block;
+        }
+
+        .cal-product-panel h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .cal-product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            transition: all 0.15s;
+        }
+
+        .cal-product-item:hover {
+            border-color: var(--primary);
+        }
+
+        .cal-product-item .product-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .cal-product-item .product-info .name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .cal-product-item .product-info .meta {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .cal-product-item .toggle-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .cal-product-item .toggle-btn.add {
+            background: var(--primary);
+            color: white;
+        }
+
+        .cal-product-item .toggle-btn.remove {
+            background: #fee2e2;
+            color: var(--danger);
+        }
     </style>
 </head>
 
@@ -768,6 +983,9 @@
                 </div>
                 <div class="status-item action-btn" id="open-history-btn">
                     <span class="btn-icon">📈 実績履歴</span>
+                </div>
+                <div class="status-item action-btn" id="open-calendar-btn" onclick="openCalendar()">
+                    <span class="btn-icon">📅 カレンダー</span>
                 </div>
                 <div id="open-candidate-list" class="status-item action-btn">
                     <label>追加</label>
@@ -798,8 +1016,6 @@
                     <div class="empty-state">＋ボタンから製品を追加してください</div>
                 </div>
             </section>
-        </main>
-
         </main>
 
         <!-- Modals -->
@@ -863,6 +1079,29 @@
 
         <div id="alert-overlay" class="alert-overlay hidden">
             <div class="alert-box">⚠️ <span id="alert-message">鉄筋不足です！</span></div>
+        </div>
+
+        <!-- Calendar Modal -->
+        <div id="calendar-modal" class="modal modal-full hidden">
+            <div class="modal-content" style="max-width: 900px;">
+                <div class="calendar-controls">
+                    <h2 class="section-title">鉄筋在庫 稼働予測</h2>
+                    <div class="calendar-controls-right">
+                        <button id="toggle-product-panel" class="btn-primary"
+                            style="padding: 8px 14px; font-size: 0.8rem;">＋ 製品追加</button>
+                        <button id="close-calendar" class="btn-secondary" style="padding: 8px 16px;">閉じる</button>
+                    </div>
+                </div>
+                <div id="cal-product-panel" class="cal-product-panel">
+                    <h3>📋 予測に追加する製品を選択</h3>
+                    <div id="cal-product-list"></div>
+                </div>
+                <div id="calendar-header-info"
+                    style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
+                    ※開始日をクリックして計画を変更できます。土日祝は稼働から除外されます。
+                </div>
+                <div id="calendar-view"></div>
+            </div>
         </div>
     </div>
 
@@ -939,7 +1178,9 @@
             editingId: null,
             expandedSection: null,
             searchQuery: "",
-            sortMode: "default"
+            sortMode: "default",
+            calendarStartDates: {}, // { originalId: 'YYYY-MM-DD' }
+            calendarProducts: []   // array of candidate IDs shown on calendar
         };
 
         const STORAGE_KEY = 'concrete_app_state';
@@ -950,7 +1191,9 @@
                 pourList: state.pourList,
                 quota: state.quota,
                 history: state.history,
-                lastProcessedDate: state.lastProcessedDate
+                lastProcessedDate: state.lastProcessedDate,
+                calendarStartDates: state.calendarStartDates,
+                calendarProducts: state.calendarProducts
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
         }
@@ -967,6 +1210,8 @@
                     state.quota = parsed.quota || 26000;
                     state.history = parsed.history || [];
                     state.lastProcessedDate = parsed.lastProcessedDate || "";
+                    state.calendarStartDates = parsed.calendarStartDates || {};
+                    state.calendarProducts = parsed.calendarProducts || [];
                 } catch (e) {
                     console.error("Failed to load state:", e);
                 }
@@ -993,7 +1238,9 @@
             modalTitle: document.getElementById('modal-title'),
             alertOverlay: document.getElementById('alert-overlay'),
             alertMessage: document.getElementById('alert-message'),
-            dateDisplay: document.getElementById('top-date-display')
+            dateDisplay: document.getElementById('top-date-display'),
+            calendarModal: document.getElementById('calendar-modal'),
+            calendarView: document.getElementById('calendar-view')
         };
 
         function init() {
@@ -1040,6 +1287,11 @@
 
             document.getElementById('close-history').onclick = () => document.getElementById('history-modal').classList.add('hidden');
             document.getElementById('open-history-btn').onclick = openHistory;
+            document.getElementById('open-calendar-btn').onclick = openCalendar;
+            document.getElementById('close-calendar').onclick = () => elements.calendarModal.classList.add('hidden');
+            document.getElementById('toggle-product-panel').onclick = () => {
+                document.getElementById('cal-product-panel').classList.toggle('show');
+            };
             document.getElementById('close-edit').onclick = () => elements.editModal.classList.add('hidden');
             document.getElementById('save-product').onclick = saveProduct;
         }
@@ -1065,6 +1317,334 @@
             document.getElementById('stats-avg-weight').textContent = `${avg.toLocaleString()}kg`;
 
             document.getElementById('history-modal').classList.remove('hidden');
+        }
+
+        // --- Calendar Forecast ---
+        // --- Japanese Holidays ---
+        function getJapaneseHolidays(year) {
+            const holidays = {};
+            const add = (m, d, name) => {
+                const key = `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                holidays[key] = name;
+            };
+            // Fixed holidays
+            add(1, 1, '元日');
+            add(2, 11, '建国記念の日');
+            add(2, 23, '天皇誕生日');
+            add(4, 29, '昭和の日');
+            add(5, 3, '憲法記念日');
+            add(5, 4, 'みどりの日');
+            add(5, 5, 'こどもの日');
+            add(8, 11, '山の日');
+            add(11, 3, '文化の日');
+            add(11, 23, '勤労感謝の日');
+
+            // Nth Monday holidays
+            function nthMonday(m, n) {
+                let count = 0;
+                for (let d = 1; d <= 31; d++) {
+                    const dt = new Date(year, m - 1, d);
+                    if (dt.getMonth() !== m - 1) break;
+                    if (dt.getDay() === 1) count++;
+                    if (count === n) return d;
+                }
+                return 1;
+            }
+            add(1, nthMonday(1, 2), '成人の日');
+            add(7, nthMonday(7, 3), '海の日');
+            add(9, nthMonday(9, 3), '敬老の日');
+            add(10, nthMonday(10, 2), 'スポーツの日');
+
+            // Equinoxes (approximate)
+            if (year === 2026) {
+                add(3, 20, '春分の日');
+                add(9, 23, '秋分の日');
+            } else if (year === 2027) {
+                add(3, 21, '春分の日');
+                add(9, 23, '秋分の日');
+            } else {
+                // Approximate for other years
+                add(3, 20, '春分の日');
+                add(9, 23, '秋分の日');
+            }
+
+            // Substitute holidays (振替休日): if a holiday falls on Sunday, next Monday is a day off
+            const keys = Object.keys(holidays);
+            keys.forEach(key => {
+                const dt = new Date(parseInt(key.substr(0, 4)), parseInt(key.substr(5, 2)) - 1, parseInt(key.substr(8, 2)));
+                if (dt.getDay() === 0) { // Sunday
+                    const next = new Date(dt);
+                    next.setDate(next.getDate() + 1);
+                    const nextKey = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-${String(next.getDate()).padStart(2, '0')}`;
+                    if (!holidays[nextKey]) {
+                        holidays[nextKey] = '振替休日';
+                    }
+                }
+            });
+
+            // National holiday (国民の休日): if a weekday is sandwiched between two holidays
+            const sortedKeys = Object.keys(holidays).sort();
+            for (let i = 0; i < sortedKeys.length - 1; i++) {
+                const d1 = new Date(parseInt(sortedKeys[i].substr(0, 4)), parseInt(sortedKeys[i].substr(5, 2)) - 1, parseInt(sortedKeys[i].substr(8, 2)));
+                const d2 = new Date(d1);
+                d2.setDate(d2.getDate() + 2);
+                const d2Key = `${d2.getFullYear()}-${String(d2.getMonth() + 1).padStart(2, '0')}-${String(d2.getDate()).padStart(2, '0')}`;
+                if (holidays[d2Key]) {
+                    const mid = new Date(d1);
+                    mid.setDate(mid.getDate() + 1);
+                    const midKey = `${mid.getFullYear()}-${String(mid.getMonth() + 1).padStart(2, '0')}-${String(mid.getDate()).padStart(2, '0')}`;
+                    if (!holidays[midKey] && mid.getDay() !== 0 && mid.getDay() !== 6) {
+                        holidays[midKey] = '国民の休日';
+                    }
+                }
+            }
+
+            // 2026 specific: May 6 substitute (Constitution Day on Sunday)
+            if (year === 2026) {
+                const may6Key = `2026-05-06`;
+                if (!holidays[may6Key]) holidays[may6Key] = '振替休日';
+                // Sep 22 national holiday (between Respect for Aged and Autumnal Equinox)
+                const sep22Key = `2026-09-22`;
+                if (!holidays[sep22Key]) holidays[sep22Key] = '国民の休日';
+            }
+
+            return holidays;
+        }
+
+        // Build holiday lookup for a range of years
+        let holidayCache = {};
+        function getHolidayName(dateStr) {
+            const year = parseInt(dateStr.substr(0, 4));
+            if (!holidayCache[year]) {
+                holidayCache[year] = getJapaneseHolidays(year);
+            }
+            return holidayCache[year][dateStr] || null;
+        }
+
+        // --- Calendar Forecast ---
+        function openCalendar() {
+            elements.calendarModal.classList.remove('hidden');
+            renderCalendarProductPanel();
+            renderCalendar();
+        }
+
+        function renderCalendarProductPanel() {
+            const panel = document.getElementById('cal-product-list');
+            panel.innerHTML = '';
+
+            const tracked = state.candidates.filter(c => c.trackingEnabled && c.rebar > 0);
+            if (tracked.length === 0) {
+                panel.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;padding:8px;">鉄筋追跡が有効な製品がありません</div>';
+                return;
+            }
+
+            tracked.forEach(p => {
+                const isAdded = state.calendarProducts.includes(p.id);
+                const item = document.createElement('div');
+                item.className = 'cal-product-item';
+                item.innerHTML = `
+                    <div class="product-info">
+                        <span class="name">${p.name}</span>
+                        <span class="meta">鉄筋: ${p.rebar}本/個 | 在庫: ${p.stock}本</span>
+                    </div>
+                    <button class="toggle-btn ${isAdded ? 'remove' : 'add'}"
+                        onclick="toggleCalendarProduct(${p.id})">
+                        ${isAdded ? '✕ 削除' : '＋ 追加'}
+                    </button>
+                `;
+                panel.appendChild(item);
+            });
+        }
+
+        function toggleCalendarProduct(productId) {
+            const idx = state.calendarProducts.indexOf(productId);
+            if (idx >= 0) {
+                state.calendarProducts.splice(idx, 1);
+            } else {
+                state.calendarProducts.push(productId);
+            }
+            saveState();
+            renderCalendarProductPanel();
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const container = elements.calendarView;
+            container.innerHTML = '';
+
+            // Helper: format date as YYYY-MM-DD using LOCAL time (not UTC)
+            function formatLocalDate(d) {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${dd}`;
+            }
+
+            function isWeekendDay(d) {
+                return d.getDay() === 0 || d.getDay() === 6;
+            }
+
+            function isHolidayOrWeekend(d) {
+                if (isWeekendDay(d)) return true;
+                return !!getHolidayName(formatLocalDate(d));
+            }
+
+            function skipToWorkday(d) {
+                while (isHolidayOrWeekend(d)) {
+                    d.setDate(d.getDate() + 1);
+                }
+                return d;
+            }
+
+            const startDate = new Date();
+            startDate.setDate(1);
+
+            // Loop for 12 months
+            for (let mOffset = 0; mOffset < 12; mOffset++) {
+                const year = startDate.getFullYear();
+                const month = startDate.getMonth();
+
+                const monthWrapper = document.createElement('div');
+                monthWrapper.className = 'month-wrapper';
+
+                const title = document.createElement('h3');
+                title.className = 'month-header';
+                title.textContent = `${year}年 ${month + 1}月`;
+                monthWrapper.appendChild(title);
+
+                const grid = document.createElement('div');
+                grid.className = 'calendar-grid';
+
+                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                dayNames.forEach(d => {
+                    const h = document.createElement('div');
+                    h.className = 'calendar-header-day';
+                    h.textContent = d;
+                    grid.appendChild(h);
+                });
+
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+
+                for (let i = 0; i < firstDay.getDay(); i++) {
+                    grid.appendChild(document.createElement('div'));
+                }
+
+                for (let d = 1; d <= lastDay.getDate(); d++) {
+                    const date = new Date(year, month, d);
+                    const isWeekend = isWeekendDay(date);
+                    const dateStr = formatLocalDate(date);
+                    const holidayName = getHolidayName(dateStr);
+                    const cell = document.createElement('div');
+                    cell.className = `calendar-day${isWeekend ? ' weekend' : ''}${holidayName ? ' holiday' : ''}`;
+                    cell.innerHTML = `<span class="day-num">${d}</span>${holidayName ? `<div class="holiday-name">${holidayName}</div>` : ''}`;
+                    cell.dataset.date = dateStr;
+
+                    // Click cell to set start date for all calendar products
+                    cell.onclick = (e) => {
+                        let selDate = new Date(year, month, d);
+                        skipToWorkday(selDate);
+                        const targetDateStr = formatLocalDate(selDate);
+                        // Set start date for calendarProducts
+                        state.calendarProducts.forEach(pid => {
+                            state.calendarStartDates[pid] = targetDateStr;
+                        });
+                        // Also set for pourList tracked items
+                        state.pourList.filter(p => p.trackingEnabled).forEach(p => {
+                            state.calendarStartDates[p.originalId] = targetDateStr;
+                        });
+                        saveState();
+                        renderCalendar();
+                    };
+
+                    grid.appendChild(cell);
+                }
+                monthWrapper.appendChild(grid);
+                container.appendChild(monthWrapper);
+
+                startDate.setMonth(startDate.getMonth() + 1);
+            }
+
+            // Build list of products to forecast
+            const forecastItems = [];
+
+            // From pourList (existing behavior)
+            state.pourList.forEach(p => {
+                if (!p.trackingEnabled) return;
+                const target = state.candidates.find(c => c.id === p.originalId);
+                if (!target) return;
+                forecastItems.push({
+                    id: p.originalId,
+                    name: p.name,
+                    rebar: target.rebar,
+                    stock: target.stock,
+                    count: p.count
+                });
+            });
+
+            // From calendarProducts (new)
+            state.calendarProducts.forEach(pid => {
+                // Don't duplicate if already in pourList
+                if (forecastItems.some(f => f.id === pid)) return;
+                const target = state.candidates.find(c => c.id === pid);
+                if (!target || !target.trackingEnabled) return;
+                forecastItems.push({
+                    id: target.id,
+                    name: target.name,
+                    rebar: target.rebar,
+                    stock: target.stock,
+                    count: target.count || 1
+                });
+            });
+
+            // Forecast Logic
+            forecastItems.forEach(p => {
+                const startDateStr = state.calendarStartDates[p.id] || formatLocalDate(new Date());
+                let currentPos = new Date(
+                    parseInt(startDateStr.split('-')[0]),
+                    parseInt(startDateStr.split('-')[1]) - 1,
+                    parseInt(startDateStr.split('-')[2])
+                );
+
+                // Skip to first workday (not weekend, not holiday)
+                skipToWorkday(currentPos);
+
+                const dailyUsage = p.rebar * p.count;
+                if (dailyUsage <= 0) return;
+
+                let rebarLeft = p.stock;
+                let dayCount = 0;
+                let isStart = true;
+
+                while (rebarLeft >= dailyUsage && dayCount < 180) {
+                    skipToWorkday(currentPos);
+
+                    const dateStr = formatLocalDate(currentPos);
+                    const cells = container.querySelectorAll(`[data-date="${dateStr}"]`);
+
+                    const isLast = (rebarLeft - dailyUsage) < dailyUsage;
+
+                    if (cells.length > 0) {
+                        const bar = document.createElement('div');
+                        bar.className = 'calendar-bar';
+                        if (isStart) bar.classList.add('start-day');
+                        if (isLast) bar.classList.add('end-day');
+                        if (state.calendarStartDates[p.id]) bar.classList.add('moved');
+                        if (isLast) bar.classList.add('last-day');
+
+                        bar.title = `${p.name}\n在庫残: ${rebarLeft}本`;
+                        bar.textContent = isStart ? p.name : "";
+                        cells[0].appendChild(bar);
+                    }
+
+                    rebarLeft -= dailyUsage;
+                    dayCount++;
+                    isStart = false;
+
+                    currentPos.setDate(currentPos.getDate() + 1);
+                    skipToWorkday(currentPos);
+                }
+            });
         }
 
         function openEditModal(productId = null) {
@@ -1184,7 +1764,7 @@
 
         function checkDailyConsumption() {
             const now = new Date();
-            const todayStr = now.toISOString().split('T')[0];
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
             if (state.lastProcessedDate && state.lastProcessedDate !== todayStr) {
                 if (state.pourList.length > 0) {
@@ -1335,6 +1915,8 @@
         window.openEditModal = openEditModal;
         window.deleteProduct = deleteProduct;
         window.toggleExpand = toggleExpand;
+        window.openCalendar = openCalendar;
+        window.toggleCalendarProduct = toggleCalendarProduct;
         init();
     </script>
 </body>
