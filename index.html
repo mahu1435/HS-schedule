@@ -26,6 +26,96 @@
             --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
 
+        /* login-overlay */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0f172a;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: #1e293b;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+        }
+
+        .login-box h2 {
+            margin-bottom: 24px;
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px;
+            background: #334155;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 0.5em;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .login-input:focus {
+            border-color: var(--primary);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .login-error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        .sync-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: #e2e8f0;
+            color: #64748b;
+            font-weight: 700;
+            margin-left: auto;
+        }
+
+        .sync-badge.online {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -445,6 +535,19 @@
             border-radius: 4px;
             border: 1px solid var(--border-color);
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-icon:hover {
+            background: white;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .action-icon.delete:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+            background: #fef2f2;
         }
 
         .quantity-controls {
@@ -969,13 +1072,29 @@
             color: var(--danger);
         }
     </style>
+    <!-- Firebase SDK (Compat v9) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 </head>
 
 <body>
+    <!-- Login Screen -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-box">
+            <h2>🔐 セキュリティ認証</h2>
+            <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 20px;">パスワードを入力してください (2311)</p>
+            <input type="password" id="login-password" class="login-input" placeholder="****" inputmode="numeric">
+            <button id="login-submit" class="login-btn">認証する</button>
+            <div id="login-error" class="login-error hidden"></div>
+        </div>
+    </div>
     <div class="app-container">
         <!-- Dashboard Header -->
         <header class="dashboard-header">
-            <div id="top-date-display" class="top-date-banner">----年--月--日</div>
+            <div class="top-date-banner">
+                <span id="top-date-display">----年--月--日</span>
+                <span id="sync-status" class="sync-badge">クラウド同期オフ</span>
+            </div>
             <div class="status-grid">
                 <div class="status-item quota-input">
                     <label>目標重量 (kg)</label>
@@ -1044,6 +1163,45 @@
         </div>
 
         <!-- Modals -->
+        <div id="history-modal" class="modal modal-full hidden">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2 class="section-title">📊 打設実績残（履歴）</h2>
+                    <button id="close-history" class="btn-secondary" style="padding: 8px 16px;">閉じる</button>
+                </div>
+                <div class="stats-summary"
+                    style="display: flex; gap: 20px; margin-bottom: 20px; padding: 15px; background: var(--bg-color); border-radius: 8px;">
+                    <div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">累計打設重量</div>
+                        <div id="stats-total-weight"
+                            style="font-size: 1.2rem; font-weight: 800; color: var(--primary);">0kg</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">1日平均重量</div>
+                        <div id="stats-avg-weight" style="font-size: 1.2rem; font-weight: 800; color: var(--primary);">
+                            0kg</div>
+                    </div>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table id="history-table" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th
+                                    style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">
+                                    日付</th>
+                                <th
+                                    style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">
+                                    重量</th>
+                                <th
+                                    style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">
+                                    件数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
         <div id="edit-modal" class="modal hidden">
             <div class="modal-content">
@@ -1183,6 +1341,61 @@
             calendarProducts: []   // array of candidate IDs shown on calendar
         };
 
+        // --- Firebase Configuration ---
+        // ユーザーから提供されたFirebase設定値を反映
+        const firebaseConfig = {
+            apiKey: "AIzaSyCqfXx8cYapbIQNvuK51CPiY0f9TMJSv5g",
+            authDomain: "concrete-manage.firebaseapp.com",
+            projectId: "concrete-manage",
+            storageBucket: "concrete-manage.firebasestorage.app",
+            messagingSenderId: "401281887589",
+            appId: "1:401281887589:web:f640fe34325dbde32f858c",
+            databaseURL: "https://concrete-manage-default-rtdb.firebaseio.com", // Realtime Databaseを有効にするとこの形式になります
+            measurementId: "G-Q2KBZXGMZ0"
+        };
+
+        let db = null;
+        let isOnline = false;
+
+        function initFirebase() {
+            if (firebaseConfig.apiKey === "AIzaSy...") {
+                console.warn("Firebase config is default/placeholder. Synchronization disabled.");
+                document.getElementById('sync-status').textContent = "クラウド同期設定待ち";
+                return;
+            }
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                isOnline = true;
+                const statusEl = document.getElementById('sync-status');
+                statusEl.textContent = "クラウド同期中";
+                statusEl.classList.add('online');
+                listenToCloud();
+            } catch (e) {
+                console.error("Firebase init failed:", e);
+                document.getElementById('sync-status').textContent = "同期エラー";
+            }
+        }
+
+        function syncToCloud() {
+            if (!isOnline || !db) return;
+            // ローカルの内容をクラウドに保存（無限ループ防止のため、更新元をチェックする場合もあるが簡易的に実装）
+            db.ref('mainState').set(state);
+        }
+
+        function listenToCloud() {
+            if (!isOnline || !db) return;
+            db.ref('mainState').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    // クラウドのデータでローカルを上書き
+                    state = data;
+                    updateUI();
+                    if (state.lastProcessedDate) updateDateDisplay();
+                }
+            });
+        }
+
         const STORAGE_KEY = 'concrete_app_state';
 
         function saveState() {
@@ -1196,9 +1409,10 @@
                 calendarProducts: state.calendarProducts
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+            syncToCloud(); // クラウドにも同期
         }
 
-        function loadState() {
+        async function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 try {
@@ -1215,6 +1429,31 @@
                 } catch (e) {
                     console.error("Failed to load state:", e);
                 }
+            }
+            // Firebaseが初期化されている場合は、listenToCloud が自動的に最新を拾う
+        }
+
+        // --- Authentication ---
+        function checkAuth() {
+            const isAuth = sessionStorage.getItem('concrete_app_auth');
+            if (isAuth === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+                return true;
+            }
+            return false;
+        }
+
+        function login() {
+            const pass = document.getElementById('login-password').value;
+            const errEl = document.getElementById('login-error');
+            if (pass === '2311') {
+                sessionStorage.setItem('concrete_app_auth', 'true');
+                document.getElementById('login-overlay').style.display = 'none';
+                errEl.classList.add('hidden');
+            } else {
+                errEl.textContent = "パスワードが正しくありません。";
+                errEl.classList.remove('hidden');
+                document.getElementById('login-password').value = "";
             }
         }
 
@@ -1285,15 +1524,36 @@
                 updateUI();
             };
 
-            document.getElementById('close-history').onclick = () => document.getElementById('history-modal').classList.add('hidden');
-            document.getElementById('open-history-btn').onclick = openHistory;
-            document.getElementById('open-calendar-btn').onclick = openCalendar;
-            document.getElementById('close-calendar').onclick = () => elements.calendarModal.classList.add('hidden');
-            document.getElementById('toggle-product-panel').onclick = () => {
-                document.getElementById('cal-product-panel').classList.toggle('show');
+            const closeHistory = document.getElementById('close-history');
+            if (closeHistory) closeHistory.onclick = () => document.getElementById('history-modal').classList.add('hidden');
+
+            const openHistoryBtn = document.getElementById('open-history-btn');
+            if (openHistoryBtn) openHistoryBtn.onclick = openHistory;
+
+            const openCalendarBtn = document.getElementById('open-calendar-btn');
+            if (openCalendarBtn) openCalendarBtn.onclick = openCalendar;
+
+            const closeCalendarBtn = document.getElementById('close-calendar');
+            if (closeCalendarBtn) closeCalendarBtn.onclick = () => elements.calendarModal.classList.add('hidden');
+
+            const toggleProductPanel = document.getElementById('toggle-product-panel');
+            if (toggleProductPanel) {
+                toggleProductPanel.onclick = () => {
+                    document.getElementById('cal-product-panel').classList.toggle('show');
+                };
+            }
+
+            const closeEditBtn = document.getElementById('close-edit');
+            if (closeEditBtn) closeEditBtn.onclick = () => elements.editModal.classList.add('hidden');
+
+            const saveProductBtn = document.getElementById('save-product');
+            if (saveProductBtn) saveProductBtn.onclick = saveProduct;
+
+            // Login Listener
+            document.getElementById('login-submit').onclick = login;
+            document.getElementById('login-password').onkeypress = (e) => {
+                if (e.key === 'Enter') login();
             };
-            document.getElementById('close-edit').onclick = () => elements.editModal.classList.add('hidden');
-            document.getElementById('save-product').onclick = saveProduct;
         }
 
         function openHistory() {
@@ -1693,10 +1953,24 @@
         }
 
         function deleteProduct(productId) {
-            if (confirm("この製品データを削除しますか？")) {
+            if (confirm("この製品データを削除しますか？\n（候補リストから完全に削除されます）")) {
+                // 候補リストから削除
                 state.candidates = state.candidates.filter(p => p.id !== productId);
+
+                // 打設リストからも削除（整合性確保）
+                state.pourList = state.pourList.filter(p => p.originalId !== productId);
+
+                // カレンダー設定からも削除
+                state.calendarProducts = state.calendarProducts.filter(id => id !== productId);
+                if (state.calendarStartDates[productId]) {
+                    delete state.calendarStartDates[productId];
+                }
+
                 saveState();
                 updateUI();
+                if (elements.calendarModal.classList.contains('hidden') === false) {
+                    renderCalendar();
+                }
             }
         }
 
@@ -1870,7 +2144,7 @@
                             </div>
                             <div class="card-actions">
                                 <button class="action-icon" onclick="event.stopPropagation(); openEditModal(${p.id})">編集</button>
-                                <button class="action-icon" onclick="event.stopPropagation(); deleteProduct(${p.id})">削除</button>
+                                <button class="action-icon delete" onclick="event.stopPropagation(); deleteProduct(${p.id})">削除</button>
                             </div>
                         </div>
                         <div class="card-side"><div class="product-weight">${p.weight.toLocaleString()}kg</div></div>
@@ -1917,6 +2191,10 @@
         window.toggleExpand = toggleExpand;
         window.openCalendar = openCalendar;
         window.toggleCalendarProduct = toggleCalendarProduct;
+
+        // --- Initialization ---
+        checkAuth();
+        initFirebase();
         init();
     </script>
 </body>
