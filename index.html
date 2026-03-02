@@ -1367,7 +1367,7 @@
             storageBucket: "concrete-manage.firebasestorage.app",
             messagingSenderId: "401281887589",
             appId: "1:401281887589:web:f640fe34325dbde32f858c",
-            databaseURL: "https://concrete-manage-default-rtdb.firebaseio.com", // Realtime Databaseを有効にするとこの形式になります
+            databaseURL: "https://concrete-manage-default-rtdb.asia-southeast1.firebasedatabase.app", // asia-southeast1 region
             measurementId: "G-Q2KBZXGMZ0"
         };
 
@@ -1375,57 +1375,82 @@
         let isOnline = false;
 
         function initFirebase() {
-            if (firebaseConfig.apiKey === "AIzaSy...") {
-                console.warn("Firebase config is default/placeholder. Synchronization disabled.");
-                document.getElementById('sync-status').textContent = "クラウド同期設定待ち";
-                return;
-            }
             try {
+                if (!firebaseConfig.apiKey || firebaseConfig.apiKey.length < 10) {
+                    console.warn("Firebase: API Key missing or too short. Synchronization disabled.");
+                    const statusEl = document.getElementById('sync-status');
+                    statusEl.textContent = "同期設定未完了";
+                    return;
+                }
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.database();
-                isOnline = true;
-                const statusEl = document.getElementById('sync-status');
-                statusEl.textContent = "クラウド同期中";
-                statusEl.classList.add('online');
+
+                // Connection state listener
+                db.ref('.info/connected').on('value', (snap) => {
+                    isOnline = snap.val() === true;
+                    const statusEl = document.getElementById('sync-status');
+                    if (isOnline) {
+                        statusEl.textContent = "クラウド同期中";
+                        statusEl.classList.add('online');
+                        statusEl.style.background = "#dcfce7";
+                        statusEl.style.color = "#15803d";
+                        console.log("Firebase: Connected to cloud.");
+                    } else {
+                        statusEl.textContent = "オフライン";
+                        statusEl.classList.remove('online');
+                        statusEl.style.background = "#f1f5f9";
+                        statusEl.style.color = "#64748b";
+                        console.log("Firebase: Disconnected.");
+                    }
+                });
+
                 listenToCloud();
             } catch (e) {
                 console.error("Firebase init failed:", e);
-                document.getElementById('sync-status').textContent = "同期エラー";
+                const statusEl = document.getElementById('sync-status');
+                if (statusEl) statusEl.textContent = "同期エラー";
             }
         }
 
         function syncToCloud() {
             if (!isOnline || !db) return;
-            // ローカルの内容をクラウドに保存
-            db.ref('mainState').set(state);
+            console.log("Firebase: Syncing to cloud...");
+            db.ref('mainState').set(state).then(() => {
+                console.log("Firebase: Sync complete.");
+            }).catch(e => {
+                console.error("Firebase: Sync failed:", e);
+            });
         }
 
         function listenToCloud() {
-            if (!isOnline || !db) return;
+            if (!db) return;
             db.ref('mainState').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    // クラウドのデータでローカルを上書きする前に整合性をチェック
-                    // Firebaseの「数字キーを持つオブジェクト」を配列に変換、または欠損を防ぐ
-                    const newState = { ...state, ...data };
+                    console.log("Firebase: Update received from cloud.");
 
-                    if (data.candidates && !Array.isArray(data.candidates)) {
-                        newState.candidates = Object.values(data.candidates);
+                    // Check for changes (to avoid unnecessary UI re-renders)
+                    const incomingStr = JSON.stringify(data);
+                    const currentStr = JSON.stringify(state);
+                    if (incomingStr === currentStr) {
+                        console.log("Firebase: No changes detected, skipping update.");
+                        return;
                     }
-                    if (data.pourList && !Array.isArray(data.pourList)) {
-                        newState.pourList = Object.values(data.pourList);
-                    }
-                    if (data.history && !Array.isArray(data.history)) {
-                        newState.history = Object.values(data.history);
-                    }
-                    if (data.calendarProducts && !Array.isArray(data.calendarProducts)) {
-                        newState.calendarProducts = Object.values(data.calendarProducts);
-                    }
+
+                    // Convert potential objects back to arrays (RTDB keys quirk)
+                    const newState = { ...state, ...data };
+                    const arrayFields = ['candidates', 'pourList', 'history', 'calendarProducts'];
+
+                    arrayFields.forEach(field => {
+                        if (data[field] && !Array.isArray(data[field])) {
+                            newState[field] = Object.values(data[field]);
+                        }
+                    });
 
                     state = newState;
                     updateUI();
                     if (state.lastProcessedDate) updateDateDisplay();
-                    console.log("Cloud data synced successfully.");
+                    console.log("Firebase: Shared state updated.");
                 }
             });
         }
