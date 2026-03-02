@@ -387,6 +387,12 @@
             color: var(--text-primary);
         }
 
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .badge {
             background: var(--bg-color);
             color: var(--text-secondary);
@@ -610,7 +616,7 @@
         }
 
         .modal-content {
-            background: white;
+            background: #f0f7ff;
             border-radius: 12px;
             width: 100%;
             max-width: 440px;
@@ -908,7 +914,6 @@
 
         .calendar-bar {
             height: 18px;
-            background: var(--primary);
             color: white;
             font-size: 0.65rem;
             margin-top: 2px;
@@ -919,11 +924,15 @@
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
             position: relative;
             z-index: 5;
             width: calc(100% + 2px);
-            /* Overlap to connect */
             margin-left: -1px;
+            font-weight: 900;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+            /* Reset any padding/margin that might cause wrapping */
+            box-sizing: border-box;
         }
 
         .calendar-bar.start-day {
@@ -934,7 +943,6 @@
         }
 
         .calendar-bar.end-day {
-            background: var(--primary);
             clip-path: polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%);
             padding-right: 10px;
             width: 100%;
@@ -947,11 +955,12 @@
         }
 
         .calendar-bar.moved {
-            background: #059669;
+            border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
         .calendar-bar.last-day {
-            background: var(--danger) !important;
+            box-shadow: 0 0 0 2px #ef4444;
+            z-index: 6;
         }
 
         .calendar-day.holiday {
@@ -1000,7 +1009,7 @@
 
         /* Product Selector Panel */
         .cal-product-panel {
-            background: #f8fafc;
+            background: #f0f7ff;
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 16px;
@@ -1093,7 +1102,11 @@
         <header class="dashboard-header">
             <div class="top-date-banner">
                 <span id="top-date-display">----年--月--日</span>
-                <span id="sync-status" class="sync-badge">クラウド同期オフ</span>
+                <div class="header-right">
+                    <button id="force-reset-btn" class="btn-secondary"
+                        style="background:rgba(255,255,255,0.1); border:none; padding:4px 8px; font-size:0.7rem; color:var(--text-secondary);">強制リセット</button>
+                    <div id="sync-status" class="sync-badge">クラウド同期オフ</div>
+                </div>
             </div>
             <div class="status-grid">
                 <div class="status-item quota-input">
@@ -1143,6 +1156,7 @@
                 <div class="modal-header">
                     <h2 class="section-title">製品の選択 <span id="candidate-count" class="badge">0</span></h2>
                     <div style="display: flex; gap: 8px;">
+                        <button id="modal-sort-toggle" class="btn-text">並べ替え: 閉</button>
                         <button id="modal-add-new" class="btn-text">+ 新規登録</button>
                         <button id="close-candidate-modal" class="btn-secondary" style="padding: 8px 16px;">閉じる</button>
                     </div>
@@ -1265,70 +1279,74 @@
 
     <script>
         // --- State Management ---
+        const defaultCandidates = [
+            { id: 1, name: "UNVS 道路横断用 300×300×2000", rebar: 2, weight: 412, priority: "高", stock: 50, count: 1 },
+            { id: 2, name: "UNVS 道路横断用 300×400×2000", rebar: 2, weight: 492, priority: "低", stock: 50, count: 1 },
+            { id: 3, name: "UNVS 道路横断用 300×500×2000", rebar: 2, weight: 570, priority: "高", stock: 50, count: 1 },
+            { id: 4, name: "UNVS 道路横断用 300×600×2000", rebar: 2, weight: 650, priority: "高", stock: 50, count: 1 },
+            { id: 5, name: "UNVS 道路横断用 端数調整用 300×300×1000", rebar: 2, weight: 250, priority: "中", stock: 50, count: 1 },
+            { id: 6, name: "UNVS 道路横断用 端数調整用 300×400×1000", rebar: 2, weight: 290, priority: "中", stock: 50, count: 1 },
+            { id: 7, name: "UNVS 道路横断用 端数調整用 300×500×1000", rebar: 2, weight: 330, priority: "中", stock: 50, count: 1 },
+            { id: 8, name: "UNVS 道路横断用 端数調整用 300×600×1000", rebar: 2, weight: 370, priority: "中", stock: 50, count: 1 },
+            { id: 9, name: "皿型側溝 標準 300×300×2000", rebar: 2, weight: 484, priority: "中", stock: 50, count: 1 },
+            { id: 10, name: "標準型U形 240×2000", rebar: 2, weight: 184, priority: "高", stock: 50, count: 1 },
+            { id: 11, name: "標準型U形 300×2000", rebar: 2, weight: 267, priority: "高", stock: 50, count: 1 },
+            { id: 12, name: "落ちふた式U形側溝 本体-3種 300A×2000", rebar: 2, weight: 419, priority: "高", stock: 50, count: 1 },
+            { id: 13, name: "落ちふた式U形側溝 本体-3種 300C×2000", rebar: 2, weight: 585, priority: "高", stock: 50, count: 1 },
+            { id: 14, name: "(スラグ入) 歩車道BKA 片R 2m", rebar: 2, weight: 145, priority: "高", stock: 50, count: 1 },
+            { id: 15, name: "(スラグ入) 歩車道BKB 片R 標準 2M", rebar: 2, weight: 230, priority: "高", stock: 50, count: 1 },
+            { id: 16, name: "(スラグ入) 歩車道BKB 両R 標準 L=2m", rebar: 2, weight: 236, priority: "中", stock: 50, count: 1 },
+            { id: 17, name: "(スラグ入) 歩車道BKC 片R 標準 2M", rebar: 2, weight: 280, priority: "中", stock: 50, count: 1 },
+            { id: 18, name: "(スラグ入) 歩車道BKC 両R 2m", rebar: 2, weight: 295, priority: "中", stock: 50, count: 1 },
+            { id: 19, name: "(スラグ入) 歩車道BKC 両R 水抜", rebar: 2, weight: 275, priority: "中", stock: 50, count: 1 },
+            { id: 20, name: "(スラグ入) 歩車道BKC 両R デリネータ L=2m", rebar: 2, weight: 267, priority: "中", stock: 50, count: 1 },
+            { id: 21, name: "(スラグ入) 歩車道BKC 両R M2切下右 (120/150)", rebar: 2, weight: 275, priority: "中", stock: 50, count: 1 },
+            { id: 22, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 標準 2M", rebar: 2, weight: 350, priority: "高", stock: 50, count: 1 },
+            { id: 23, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 標準 1M", rebar: 2, weight: 175, priority: "中", stock: 50, count: 1 },
+            { id: 24, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 水抜 2M", rebar: 2, weight: 327, priority: "中", stock: 50, count: 1 },
+            { id: 25, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 切下 2M", rebar: 2, weight: 328, priority: "高", stock: 50, count: 1 },
+            { id: 26, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 切下 1M", rebar: 2, weight: 164, priority: "中", stock: 50, count: 1 },
+            { id: 27, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 切下デリネータ 2M", rebar: 2, weight: 320, priority: "中", stock: 50, count: 1 },
+            { id: 28, name: "RCBOX 富山 300×300×2000", rebar: 2, weight: 825, priority: "中", stock: 50, count: 1 },
+            { id: 29, name: "RCBOX 富山 500×500×2000", rebar: 2, weight: 1550, priority: "中", stock: 50, count: 1 },
+            { id: 30, name: "RCBOX 富山 500×500×1500", rebar: 2, weight: 1163, priority: "中", stock: 50, count: 1 },
+            { id: 31, name: "カルバートフリュームT 1.5M 600×1500", rebar: 2, weight: 913, priority: "中", stock: 50, count: 1 },
+            { id: 32, name: "EWT富山 2種 600×2", rebar: 2, weight: 545, priority: "高", stock: 50, count: 1 },
+            { id: 33, name: "EWT富山 2種 700×2", rebar: 2, weight: 610, priority: "中", stock: 50, count: 1 },
+            { id: 34, name: "EWT富山 2種 800×2", rebar: 2, weight: 680, priority: "中", stock: 50, count: 1 },
+            { id: 35, name: "EWT富山 2種 900×2", rebar: 2, weight: 750, priority: "中", stock: 50, count: 1 },
+            { id: 36, name: "EWT富山 2種 1000×2", rebar: 2, weight: 815, priority: "中", stock: 50, count: 1 },
+            { id: 37, name: "EWT富山 2種 600×1", rebar: 2, weight: 272, priority: "中", stock: 50, count: 1 },
+            { id: 38, name: "EWT富山 2種 700×1", rebar: 2, weight: 305, priority: "中", stock: 50, count: 1 },
+            { id: 39, name: "EWT富山 2種 800×1", rebar: 2, weight: 340, priority: "中", stock: 50, count: 1 },
+            { id: 40, name: "EWT富山 2種 900×1", rebar: 2, weight: 375, priority: "中", stock: 50, count: 1 },
+            { id: 41, name: "EWT富山 2種 1000×1", rebar: 2, weight: 407, priority: "中", stock: 50, count: 1 },
+            { id: 42, name: "BF本体 1種 300×2", rebar: 2, weight: 136, priority: "高", stock: 50, count: 1 },
+            { id: 43, name: "JBF-T 標準 300×2", rebar: 2, weight: 141, priority: "高", stock: 50, count: 1 },
+            { id: 44, name: "JBF-T 標準 400×2", rebar: 2, weight: 233, priority: "高", stock: 50, count: 1 },
+            { id: 45, name: "JBF-T 標準 500×2", rebar: 2, weight: 316, priority: "高", stock: 50, count: 1 },
+            { id: 46, name: "JBF-T 標準 600×2", rebar: 2, weight: 397, priority: "中", stock: 50, count: 1 },
+            { id: 47, name: "JBF-T 標準 700×2", rebar: 2, weight: 525, priority: "中", stock: 50, count: 1 },
+            { id: 48, name: "JBF-T 標準 800×2", rebar: 2, weight: 620, priority: "中", stock: 50, count: 1 },
+            { id: 49, name: "JBF-T 分水 300×1", rebar: 2, weight: 98, priority: "中", stock: 50, count: 1 },
+            { id: 50, name: "JBF-T 暗渠 300×1", rebar: 2, weight: 103, priority: "中", stock: 50, count: 1 },
+            { id: 51, name: "JBF-T 暗渠 400×1", rebar: 2, weight: 159, priority: "高", stock: 50, count: 1 },
+            { id: 52, name: "JBF-T 暗渠 500×1", rebar: 2, weight: 223, priority: "中", stock: 50, count: 1 },
+            { id: 53, name: "CD B型 300×300×2000", rebar: 2, weight: 192, priority: "中", stock: 50, count: 1 },
+            { id: 54, name: "CD B型 400×400×2000", rebar: 2, weight: 282, priority: "中", stock: 50, count: 1 },
+            { id: 55, name: "ヘイベBK割石 標準 500", rebar: 2, weight: 435, priority: "低", stock: 50, count: 1 },
+            { id: 56, name: "ヘイベBK用基礎版 2型 500 (美山河兼)", rebar: 2, weight: 389, priority: "低", stock: 50, count: 1 },
+            { id: 57, name: "簡易水門一体型ブロック JBF-T300/600用", rebar: 2, weight: 22, priority: "高", stock: 50, count: 1 },
+            { id: 58, name: "簡易水門一体型ブロック JBF-T700/800用", rebar: 2, weight: 27, priority: "高", stock: 50, count: 1 },
+            { id: 59, name: "(スラグ入) 簡易水門一体型ブロック JBF-T300/600用 (本体のみ)", rebar: 2, weight: 14, priority: "中", stock: 50, count: 1 },
+            { id: 60, name: "(スラグ入) 簡易水門一体型ブロック JBF-T700/800用 (本体のみ)", rebar: 2, weight: 19, priority: "中", stock: 50, count: 1 },
+            { id: 61, name: "地先境界BKC 面取り9c", rebar: 2, weight: 31, priority: "高", stock: 50, count: 1 }
+        ];
+
         let state = {
-            candidates: [
-                { id: 1, name: "UNVS 道路横断用 300×300×2000", rebar: 2, weight: 412, priority: "高", stock: 50, count: 1 },
-                { id: 2, name: "UNVS 道路横断用 300×400×2000", rebar: 2, weight: 492, priority: "低", stock: 50, count: 1 },
-                { id: 3, name: "UNVS 道路横断用 300×500×2000", rebar: 2, weight: 570, priority: "高", stock: 50, count: 1 },
-                { id: 4, name: "UNVS 道路横断用 300×600×2000", rebar: 2, weight: 650, priority: "高", stock: 50, count: 1 },
-                { id: 5, name: "UNVS 道路横断用 端数調整用 300×300×1000", rebar: 2, weight: 250, priority: "中", stock: 50, count: 1 },
-                { id: 6, name: "UNVS 道路横断用 端数調整用 300×400×1000", rebar: 2, weight: 290, priority: "中", stock: 50, count: 1 },
-                { id: 7, name: "UNVS 道路横断用 端数調整用 300×500×1000", rebar: 2, weight: 330, priority: "中", stock: 50, count: 1 },
-                { id: 8, name: "UNVS 道路横断用 端数調整用 300×600×1000", rebar: 2, weight: 370, priority: "中", stock: 50, count: 1 },
-                { id: 9, name: "皿型側溝 標準 300×300×2000", rebar: 2, weight: 484, priority: "中", stock: 50, count: 1 },
-                { id: 10, name: "標準型U形 240×2000", rebar: 2, weight: 184, priority: "高", stock: 50, count: 1 },
-                { id: 11, name: "標準型U形 300×2000", rebar: 2, weight: 267, priority: "高", stock: 50, count: 1 },
-                { id: 12, name: "落ちふた式U形側溝 本体-3種 300A×2000", rebar: 2, weight: 419, priority: "高", stock: 50, count: 1 },
-                { id: 13, name: "落ちふた式U形側溝 本体-3種 300C×2000", rebar: 2, weight: 585, priority: "高", stock: 50, count: 1 },
-                { id: 14, name: "(スラグ入) 歩車道BKA 片R 2m", rebar: 2, weight: 145, priority: "高", stock: 50, count: 1 },
-                { id: 15, name: "(スラグ入) 歩車道BKB 片R 標準 2M", rebar: 2, weight: 230, priority: "高", stock: 50, count: 1 },
-                { id: 16, name: "(スラグ入) 歩車道BKB 両R 標準 L=2m", rebar: 2, weight: 236, priority: "中", stock: 50, count: 1 },
-                { id: 17, name: "(スラグ入) 歩車道BKC 片R 標準 2M", rebar: 2, weight: 280, priority: "中", stock: 50, count: 1 },
-                { id: 18, name: "(スラグ入) 歩車道BKC 両R 2m", rebar: 2, weight: 295, priority: "中", stock: 50, count: 1 },
-                { id: 19, name: "(スラグ入) 歩車道BKC 両R 水抜", rebar: 2, weight: 275, priority: "中", stock: 50, count: 1 },
-                { id: 20, name: "(スラグ入) 歩車道BKC 両R デリネータ L=2m", rebar: 2, weight: 267, priority: "中", stock: 50, count: 1 },
-                { id: 21, name: "(スラグ入) 歩車道BKC 両R M2切下右 (120/150)", rebar: 2, weight: 275, priority: "中", stock: 50, count: 1 },
-                { id: 22, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 標準 2M", rebar: 2, weight: 350, priority: "高", stock: 50, count: 1 },
-                { id: 23, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 標準 1M", rebar: 2, weight: 175, priority: "中", stock: 50, count: 1 },
-                { id: 24, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 水抜 2M", rebar: 2, weight: 327, priority: "中", stock: 50, count: 1 },
-                { id: 25, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 切下 2M", rebar: 2, weight: 328, priority: "高", stock: 50, count: 1 },
-                { id: 26, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 切下 1M", rebar: 2, weight: 164, priority: "中", stock: 50, count: 1 },
-                { id: 27, name: "(スラグ入) 歩車道BKH H=350 両R(Fa-25) 切下デリネータ 2M", rebar: 2, weight: 320, priority: "中", stock: 50, count: 1 },
-                { id: 28, name: "RCBOX 富山 300×300×2000", rebar: 2, weight: 825, priority: "中", stock: 50, count: 1 },
-                { id: 29, name: "RCBOX 富山 500×500×2000", rebar: 2, weight: 1550, priority: "中", stock: 50, count: 1 },
-                { id: 30, name: "RCBOX 富山 500×500×1500", rebar: 2, weight: 1163, priority: "中", stock: 50, count: 1 },
-                { id: 31, name: "カルバートフリュームT 1.5M 600×1500", rebar: 2, weight: 913, priority: "中", stock: 50, count: 1 },
-                { id: 32, name: "EWT富山 2種 600×2", rebar: 2, weight: 545, priority: "高", stock: 50, count: 1 },
-                { id: 33, name: "EWT富山 2種 700×2", rebar: 2, weight: 610, priority: "中", stock: 50, count: 1 },
-                { id: 34, name: "EWT富山 2種 800×2", rebar: 2, weight: 680, priority: "中", stock: 50, count: 1 },
-                { id: 35, name: "EWT富山 2種 900×2", rebar: 2, weight: 750, priority: "中", stock: 50, count: 1 },
-                { id: 36, name: "EWT富山 2種 1000×2", rebar: 2, weight: 815, priority: "中", stock: 50, count: 1 },
-                { id: 37, name: "EWT富山 2種 600×1", rebar: 2, weight: 272, priority: "中", stock: 50, count: 1 },
-                { id: 38, name: "EWT富山 2種 700×1", rebar: 2, weight: 305, priority: "中", stock: 50, count: 1 },
-                { id: 39, name: "EWT富山 2種 800×1", rebar: 2, weight: 340, priority: "中", stock: 50, count: 1 },
-                { id: 40, name: "EWT富山 2種 900×1", rebar: 2, weight: 375, priority: "中", stock: 50, count: 1 },
-                { id: 41, name: "EWT富山 2種 1000×1", rebar: 2, weight: 407, priority: "中", stock: 50, count: 1 },
-                { id: 42, name: "BF本体 1種 300×2", rebar: 2, weight: 136, priority: "高", stock: 50, count: 1 },
-                { id: 43, name: "JBF-T 標準 300×2", rebar: 2, weight: 141, priority: "高", stock: 50, count: 1 },
-                { id: 44, name: "JBF-T 標準 400×2", rebar: 2, weight: 233, priority: "高", stock: 50, count: 1 },
-                { id: 45, name: "JBF-T 標準 500×2", rebar: 2, weight: 316, priority: "高", stock: 50, count: 1 },
-                { id: 46, name: "JBF-T 標準 600×2", rebar: 2, weight: 397, priority: "中", stock: 50, count: 1 },
-                { id: 47, name: "JBF-T 標準 700×2", rebar: 2, weight: 525, priority: "中", stock: 50, count: 1 },
-                { id: 48, name: "JBF-T 標準 800×2", rebar: 2, weight: 620, priority: "中", stock: 50, count: 1 },
-                { id: 49, name: "JBF-T 分水 300×1", rebar: 2, weight: 98, priority: "中", stock: 50, count: 1 },
-                { id: 50, name: "JBF-T 暗渠 300×1", rebar: 2, weight: 103, priority: "中", stock: 50, count: 1 },
-                { id: 51, name: "JBF-T 暗渠 400×1", rebar: 2, weight: 159, priority: "高", stock: 50, count: 1 },
-                { id: 52, name: "JBF-T 暗渠 500×1", rebar: 2, weight: 223, priority: "中", stock: 50, count: 1 },
-                { id: 53, name: "CD B型 300×300×2000", rebar: 2, weight: 192, priority: "中", stock: 50, count: 1 },
-                { id: 54, name: "CD B型 400×400×2000", rebar: 2, weight: 282, priority: "中", stock: 50, count: 1 },
-                { id: 55, name: "ヘイベBK割石 標準 500", rebar: 2, weight: 435, priority: "低", stock: 50, count: 1 },
-                { id: 56, name: "ヘイベBK用基礎版 2型 500 (美山河兼)", rebar: 2, weight: 389, priority: "低", stock: 50, count: 1 },
-                { id: 57, name: "簡易水門一体型ブロック JBF-T300/600用", rebar: 2, weight: 22, priority: "高", stock: 50, count: 1 },
-                { id: 58, name: "簡易水門一体型ブロック JBF-T700/800用", rebar: 2, weight: 27, priority: "高", stock: 50, count: 1 },
-                { id: 59, name: "(スラグ入) 簡易水門一体型ブロック JBF-T300/600用 (本体のみ)", rebar: 2, weight: 14, priority: "中", stock: 50, count: 1 },
-                { id: 60, name: "(スラグ入) 簡易水門一体型ブロック JBF-T700/800用 (本体のみ)", rebar: 2, weight: 19, priority: "中", stock: 50, count: 1 },
-                { id: 61, name: "地先境界BKC 面取り9c", rebar: 2, weight: 31, priority: "高", stock: 50, count: 1 }
-            ],
+            isSortingMode: false,
+            sortMode: "default",
+            candidates: JSON.parse(JSON.stringify(defaultCandidates)),
             pourList: [],
             quota: 26000,
             history: [],
@@ -1336,9 +1354,8 @@
             editingId: null,
             expandedSection: null,
             searchQuery: "",
-            sortMode: "default",
-            calendarStartDates: {}, // { originalId: 'YYYY-MM-DD' }
-            calendarProducts: []   // array of candidate IDs shown on calendar
+            calendarStartDates: {},
+            calendarProducts: []
         };
 
         // --- Firebase Configuration ---
@@ -1379,7 +1396,7 @@
 
         function syncToCloud() {
             if (!isOnline || !db) return;
-            // ローカルの内容をクラウドに保存（無限ループ防止のため、更新元をチェックする場合もあるが簡易的に実装）
+            // ローカルの内容をクラウドに保存
             db.ref('mainState').set(state);
         }
 
@@ -1388,10 +1405,27 @@
             db.ref('mainState').on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
-                    // クラウドのデータでローカルを上書き
-                    state = data;
+                    // クラウドのデータでローカルを上書きする前に整合性をチェック
+                    // Firebaseの「数字キーを持つオブジェクト」を配列に変換、または欠損を防ぐ
+                    const newState = { ...state, ...data };
+
+                    if (data.candidates && !Array.isArray(data.candidates)) {
+                        newState.candidates = Object.values(data.candidates);
+                    }
+                    if (data.pourList && !Array.isArray(data.pourList)) {
+                        newState.pourList = Object.values(data.pourList);
+                    }
+                    if (data.history && !Array.isArray(data.history)) {
+                        newState.history = Object.values(data.history);
+                    }
+                    if (data.calendarProducts && !Array.isArray(data.calendarProducts)) {
+                        newState.calendarProducts = Object.values(data.calendarProducts);
+                    }
+
+                    state = newState;
                     updateUI();
                     if (state.lastProcessedDate) updateDateDisplay();
+                    console.log("Cloud data synced successfully.");
                 }
             });
         }
@@ -1406,13 +1440,15 @@
                 history: state.history,
                 lastProcessedDate: state.lastProcessedDate,
                 calendarStartDates: state.calendarStartDates,
-                calendarProducts: state.calendarProducts
+                calendarProducts: state.calendarProducts,
+                sortMode: state.sortMode,
+                isSortingMode: state.isSortingMode
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-            syncToCloud(); // クラウドにも同期
+            syncToCloud();
         }
 
-        async function loadState() {
+        function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 try {
@@ -1426,11 +1462,12 @@
                     state.lastProcessedDate = parsed.lastProcessedDate || "";
                     state.calendarStartDates = parsed.calendarStartDates || {};
                     state.calendarProducts = parsed.calendarProducts || [];
+                    state.sortMode = parsed.sortMode || "default";
+                    state.isSortingMode = parsed.isSortingMode || false;
                 } catch (e) {
                     console.error("Failed to load state:", e);
                 }
             }
-            // Firebaseが初期化されている場合は、listenToCloud が自動的に最新を拾う
         }
 
         // --- Authentication ---
@@ -1487,6 +1524,17 @@
             checkDailyConsumption();
             updateDateDisplay();
             setupEventListeners();
+
+            // Restore lost products (ID: 5)
+            const hasId5 = state.candidates.some(c => Number(c.id) === 5);
+            if (!hasId5) {
+                const item = defaultCandidates.find(c => c.id === 5);
+                if (item) {
+                    state.candidates.push(JSON.parse(JSON.stringify(item)));
+                    saveState();
+                }
+            }
+
             updateUI();
         }
 
@@ -1508,17 +1556,29 @@
                 updateUI();
             };
             document.getElementById('close-candidate-modal').onclick = () => elements.candidateModal.classList.add('hidden');
-            document.getElementById('modal-add-new').onclick = () => openEditModal(null);
+            // Modal Add New
+            document.getElementById('modal-add-new').onclick = () => openEditModal();
 
-            elements.sortSelect.onchange = (e) => {
-                state.sortMode = e.target.value;
-                updateUI();
-            };
+            // Modal Sort Toggle
+            const sortToggle = document.getElementById('modal-sort-toggle');
+            if (sortToggle) {
+                sortToggle.onclick = () => {
+                    state.isSortingMode = !state.isSortingMode;
+                    sortToggle.textContent = state.isSortingMode ? "並べ替え: 開" : "並べ替え: 閉";
+                    sortToggle.style.backgroundColor = state.isSortingMode ? "#e0e7ff" : "";
+                    updateUI();
+                };
+            }
 
-            elements.editTracking.onchange = (e) => {
-                elements.trackingSettings.classList.toggle('hidden-tracking', !e.target.checked);
-            };
+            if (elements.sortSelect) {
+                elements.sortSelect.onchange = (e) => {
+                    state.sortMode = e.target.value;
+                    updateUI();
+                };
+            }
 
+            // Close Candidate Modal
+            // Search
             document.getElementById('search-input').oninput = (e) => {
                 state.searchQuery = e.target.value.toLowerCase();
                 updateUI();
@@ -1533,8 +1593,13 @@
             const openCalendarBtn = document.getElementById('open-calendar-btn');
             if (openCalendarBtn) openCalendarBtn.onclick = openCalendar;
 
-            const closeCalendarBtn = document.getElementById('close-calendar');
-            if (closeCalendarBtn) closeCalendarBtn.onclick = () => elements.calendarModal.classList.add('hidden');
+            document.getElementById('close-calendar').onclick = () => elements.calendarModal.classList.add('hidden');
+
+            if (elements.editTracking) {
+                elements.editTracking.onchange = (e) => {
+                    elements.trackingSettings.classList.toggle('hidden-tracking', !e.target.checked);
+                };
+            }
 
             const toggleProductPanel = document.getElementById('toggle-product-panel');
             if (toggleProductPanel) {
@@ -1554,6 +1619,17 @@
             document.getElementById('login-password').onkeypress = (e) => {
                 if (e.key === 'Enter') login();
             };
+
+            // Force Reset Listener
+            const forceReset = document.getElementById('force-reset-btn');
+            if (forceReset) {
+                forceReset.onclick = () => {
+                    if (confirm("データを初期状態に戻し、同期を一時停止しますか？\n（ブラウザをリロードすると同期が再開されます）")) {
+                        localStorage.removeItem('concrete_app_state');
+                        location.reload();
+                    }
+                };
+            }
         }
 
         function openHistory() {
@@ -1688,6 +1764,22 @@
             renderCalendar();
         }
 
+        function getCalendarProductInfo(productId) {
+            // 鉄筋追跡が有効な製品のみをID順に並べて番号を振る
+            const trackable = state.candidates
+                .filter(c => c.trackingEnabled)
+                .sort((a, b) => a.id - b.id);
+            const idx = trackable.findIndex(c => c.id === productId);
+
+            const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#a855f7', '#14b8a6'];
+            if (idx === -1) return { number: '?', color: '#94a3b8' };
+
+            return {
+                number: idx + 1,
+                color: colors[idx % colors.length]
+            };
+        }
+
         function renderCalendarProductPanel() {
             const panel = document.getElementById('cal-product-list');
             panel.innerHTML = '';
@@ -1699,13 +1791,17 @@
             }
 
             tracked.forEach(p => {
+                const info = getCalendarProductInfo(p.id);
                 const isAdded = state.calendarProducts.includes(p.id);
                 const item = document.createElement('div');
                 item.className = 'cal-product-item';
                 item.innerHTML = `
                     <div class="product-info">
-                        <span class="name">${p.name}</span>
-                        <span class="meta">鉄筋: ${p.rebar}本/個 | 在庫: ${p.stock}本</span>
+                        <span class="product-number" style="background:${info.color}; color:white; padding:2px 6px; border-radius:4px; margin-right:8px; font-weight:bold; font-size:0.8rem;">${info.number}</span>
+                        <span class="name" style="font-weight:600;">${p.name}</span>
+                        <div class="meta" style="font-size:0.75rem; color:var(--text-secondary); margin-left:26px;">
+                            鉄筋: ${p.rebar}本/個 | 在庫: ${p.stock}本
+                        </div>
                     </div>
                     <button class="toggle-btn ${isAdded ? 'remove' : 'add'}"
                         onclick="toggleCalendarProduct(${p.id})">
@@ -1729,188 +1825,195 @@
         }
 
         function renderCalendar() {
-            const container = elements.calendarView;
-            container.innerHTML = '';
+            try {
+                const container = elements.calendarView;
+                if (!container) return;
+                container.innerHTML = '';
 
-            // Helper: format date as YYYY-MM-DD using LOCAL time (not UTC)
-            function formatLocalDate(d) {
-                const y = d.getFullYear();
-                const m = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                return `${y}-${m}-${dd}`;
-            }
-
-            function isWeekendDay(d) {
-                return d.getDay() === 0 || d.getDay() === 6;
-            }
-
-            function isHolidayOrWeekend(d) {
-                if (isWeekendDay(d)) return true;
-                return !!getHolidayName(formatLocalDate(d));
-            }
-
-            function skipToWorkday(d) {
-                while (isHolidayOrWeekend(d)) {
-                    d.setDate(d.getDate() + 1);
-                }
-                return d;
-            }
-
-            const startDate = new Date();
-            startDate.setDate(1);
-
-            // Loop for 12 months
-            for (let mOffset = 0; mOffset < 12; mOffset++) {
-                const year = startDate.getFullYear();
-                const month = startDate.getMonth();
-
-                const monthWrapper = document.createElement('div');
-                monthWrapper.className = 'month-wrapper';
-
-                const title = document.createElement('h3');
-                title.className = 'month-header';
-                title.textContent = `${year}年 ${month + 1}月`;
-                monthWrapper.appendChild(title);
-
-                const grid = document.createElement('div');
-                grid.className = 'calendar-grid';
-
-                const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                dayNames.forEach(d => {
-                    const h = document.createElement('div');
-                    h.className = 'calendar-header-day';
-                    h.textContent = d;
-                    grid.appendChild(h);
-                });
-
-                const firstDay = new Date(year, month, 1);
-                const lastDay = new Date(year, month + 1, 0);
-
-                for (let i = 0; i < firstDay.getDay(); i++) {
-                    grid.appendChild(document.createElement('div'));
+                // Helper: format date as YYYY-MM-DD using LOCAL time (not UTC)
+                function formatLocalDate(d) {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${dd}`;
                 }
 
-                for (let d = 1; d <= lastDay.getDate(); d++) {
-                    const date = new Date(year, month, d);
-                    const isWeekend = isWeekendDay(date);
-                    const dateStr = formatLocalDate(date);
-                    const holidayName = getHolidayName(dateStr);
-                    const cell = document.createElement('div');
-                    cell.className = `calendar-day${isWeekend ? ' weekend' : ''}${holidayName ? ' holiday' : ''}`;
-                    cell.innerHTML = `<span class="day-num">${d}</span>${holidayName ? `<div class="holiday-name">${holidayName}</div>` : ''}`;
-                    cell.dataset.date = dateStr;
-
-                    // Click cell to set start date for all calendar products
-                    cell.onclick = (e) => {
-                        let selDate = new Date(year, month, d);
-                        skipToWorkday(selDate);
-                        const targetDateStr = formatLocalDate(selDate);
-                        // Set start date for calendarProducts
-                        state.calendarProducts.forEach(pid => {
-                            state.calendarStartDates[pid] = targetDateStr;
-                        });
-                        // Also set for pourList tracked items
-                        state.pourList.filter(p => p.trackingEnabled).forEach(p => {
-                            state.calendarStartDates[p.originalId] = targetDateStr;
-                        });
-                        saveState();
-                        renderCalendar();
-                    };
-
-                    grid.appendChild(cell);
+                function isWeekendDay(d) {
+                    return d.getDay() === 0 || d.getDay() === 6;
                 }
-                monthWrapper.appendChild(grid);
-                container.appendChild(monthWrapper);
 
-                startDate.setMonth(startDate.getMonth() + 1);
-            }
+                function isHolidayOrWeekend(d) {
+                    if (isWeekendDay(d)) return true;
+                    return !!getHolidayName(formatLocalDate(d));
+                }
 
-            // Build list of products to forecast
-            const forecastItems = [];
+                function skipToWorkday(d) {
+                    while (isHolidayOrWeekend(d)) {
+                        d.setDate(d.getDate() + 1);
+                    }
+                    return d;
+                }
 
-            // From pourList (existing behavior)
-            state.pourList.forEach(p => {
-                if (!p.trackingEnabled) return;
-                const target = state.candidates.find(c => c.id === p.originalId);
-                if (!target) return;
-                forecastItems.push({
-                    id: p.originalId,
-                    name: p.name,
-                    rebar: target.rebar,
-                    stock: target.stock,
-                    count: p.count
-                });
-            });
+                const startDate = new Date();
+                startDate.setDate(1);
 
-            // From calendarProducts (new)
-            state.calendarProducts.forEach(pid => {
-                // Don't duplicate if already in pourList
-                if (forecastItems.some(f => f.id === pid)) return;
-                const target = state.candidates.find(c => c.id === pid);
-                if (!target || !target.trackingEnabled) return;
-                forecastItems.push({
-                    id: target.id,
-                    name: target.name,
-                    rebar: target.rebar,
-                    stock: target.stock,
-                    count: target.count || 1
-                });
-            });
+                // Loop for 12 months
+                for (let mOffset = 0; mOffset < 12; mOffset++) {
+                    const year = startDate.getFullYear();
+                    const month = startDate.getMonth();
 
-            // Forecast Logic
-            forecastItems.forEach(p => {
-                const startDateStr = state.calendarStartDates[p.id] || formatLocalDate(new Date());
-                let currentPos = new Date(
-                    parseInt(startDateStr.split('-')[0]),
-                    parseInt(startDateStr.split('-')[1]) - 1,
-                    parseInt(startDateStr.split('-')[2])
-                );
+                    const monthWrapper = document.createElement('div');
+                    monthWrapper.className = 'month-wrapper';
 
-                // Skip to first workday (not weekend, not holiday)
-                skipToWorkday(currentPos);
+                    const title = document.createElement('h3');
+                    title.className = 'month-header';
+                    title.textContent = `${year}年 ${month + 1}月`;
+                    monthWrapper.appendChild(title);
 
-                const dailyUsage = p.rebar * p.count;
-                if (dailyUsage <= 0) return;
+                    const grid = document.createElement('div');
+                    grid.className = 'calendar-grid';
 
-                let rebarLeft = p.stock;
-                let dayCount = 0;
-                let isStart = true;
+                    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+                    dayNames.forEach(d => {
+                        const h = document.createElement('div');
+                        h.className = 'calendar-header-day';
+                        h.textContent = d;
+                        grid.appendChild(h);
+                    });
 
-                while (rebarLeft >= dailyUsage && dayCount < 180) {
-                    skipToWorkday(currentPos);
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
 
-                    const dateStr = formatLocalDate(currentPos);
-                    const cells = container.querySelectorAll(`[data-date="${dateStr}"]`);
-
-                    const isLast = (rebarLeft - dailyUsage) < dailyUsage;
-
-                    if (cells.length > 0) {
-                        const bar = document.createElement('div');
-                        bar.className = 'calendar-bar';
-                        if (isStart) bar.classList.add('start-day');
-                        if (isLast) bar.classList.add('end-day');
-                        if (state.calendarStartDates[p.id]) bar.classList.add('moved');
-                        if (isLast) bar.classList.add('last-day');
-
-                        bar.title = `${p.name}\n在庫残: ${rebarLeft}本`;
-                        bar.textContent = isStart ? p.name : "";
-                        cells[0].appendChild(bar);
+                    for (let i = 0; i < firstDay.getDay(); i++) {
+                        grid.appendChild(document.createElement('div'));
                     }
 
-                    rebarLeft -= dailyUsage;
-                    dayCount++;
-                    isStart = false;
+                    for (let d = 1; d <= lastDay.getDate(); d++) {
+                        const date = new Date(year, month, d);
+                        const isWeekend = isWeekendDay(date);
+                        const dateStr = formatLocalDate(date);
+                        const holidayName = getHolidayName(dateStr);
+                        const cell = document.createElement('div');
+                        cell.className = `calendar-day${isWeekend ? ' weekend' : ''}${holidayName ? ' holiday' : ''}`;
+                        cell.innerHTML = `<span class="day-num">${d}</span>${holidayName ? `<div class="holiday-name">${holidayName}</div>` : ''}`;
+                        cell.dataset.date = dateStr;
 
-                    currentPos.setDate(currentPos.getDate() + 1);
-                    skipToWorkday(currentPos);
+                        // Click cell to set start date for all calendar products
+                        cell.onclick = (e) => {
+                            let selDate = new Date(year, month, d);
+                            skipToWorkday(selDate);
+                            const targetDateStr = formatLocalDate(selDate);
+                            // Set start date for calendarProducts
+                            state.calendarProducts.forEach(pid => {
+                                state.calendarStartDates[pid] = targetDateStr;
+                            });
+                            // Also set for pourList tracked items
+                            state.pourList.filter(p => p.trackingEnabled).forEach(p => {
+                                state.calendarStartDates[p.originalId] = targetDateStr;
+                            });
+                            saveState();
+                            renderCalendar();
+                        };
+
+                        grid.appendChild(cell);
+                    }
+                    monthWrapper.appendChild(grid);
+                    container.appendChild(monthWrapper);
+
+                    startDate.setMonth(startDate.getMonth() + 1);
                 }
-            });
+
+                // Build list of products to forecast
+                const forecastItems = [];
+
+                // From pourList (existing behavior)
+                state.pourList.forEach(p => {
+                    if (!p.trackingEnabled) return;
+                    const target = state.candidates.find(c => c.id === p.originalId);
+                    if (!target) return;
+                    forecastItems.push({
+                        id: p.originalId,
+                        name: p.name,
+                        rebar: target.rebar,
+                        stock: target.stock,
+                        count: p.count
+                    });
+                });
+
+                // From calendarProducts (new)
+                state.calendarProducts.forEach(pid => {
+                    // Don't duplicate if already in pourList
+                    if (forecastItems.some(f => f.id === pid)) return;
+                    const target = state.candidates.find(c => c.id === pid);
+                    if (!target || !target.trackingEnabled) return;
+                    forecastItems.push({
+                        id: target.id,
+                        name: target.name,
+                        rebar: target.rebar,
+                        stock: target.stock,
+                        count: target.count || 1
+                    });
+                });
+
+                // Forecast Logic
+                forecastItems.forEach(p => {
+                    const info = getCalendarProductInfo(p.id);
+                    const startDateStr = state.calendarStartDates[p.id] || formatLocalDate(new Date());
+                    let currentPos = new Date(
+                        parseInt(startDateStr.split('-')[0]),
+                        parseInt(startDateStr.split('-')[1]) - 1,
+                        parseInt(startDateStr.split('-')[2])
+                    );
+
+                    // Skip to first workday (not weekend, not holiday)
+                    skipToWorkday(currentPos);
+
+                    const dailyUsage = p.rebar * p.count;
+                    if (dailyUsage <= 0) return;
+
+                    let rebarLeft = p.stock;
+                    let dayCount = 0;
+                    let isStart = true;
+
+                    while (rebarLeft >= dailyUsage && dayCount < 180) {
+                        skipToWorkday(currentPos);
+
+                        const dateStr = formatLocalDate(currentPos);
+                        const cells = container.querySelectorAll(`[data-date="${dateStr}"]`);
+
+                        const isLast = (rebarLeft - dailyUsage) < dailyUsage;
+
+                        if (cells.length > 0) {
+                            const bar = document.createElement('div');
+                            bar.className = 'calendar-bar';
+                            bar.style.backgroundColor = info.color;
+                            if (isStart) bar.classList.add('start-day');
+                            if (isLast) bar.classList.add('end-day');
+                            if (state.calendarStartDates[p.id]) bar.classList.add('moved');
+                            if (isLast) bar.classList.add('last-day');
+
+                            bar.title = `${p.name}\n在庫残: ${rebarLeft}本`;
+                            bar.textContent = info.number;
+                            cells[0].appendChild(bar);
+                        }
+
+                        rebarLeft -= dailyUsage;
+                        dayCount++;
+                        isStart = false;
+
+                        currentPos.setDate(currentPos.getDate() + 1);
+                        skipToWorkday(currentPos);
+                    }
+                });
+            } catch (e) {
+                console.error("renderCalendar crashed:", e);
+            }
         }
 
         function openEditModal(productId = null) {
             state.editingId = productId;
             if (productId) {
-                const p = state.candidates.find(item => item.id === productId);
+                const p = state.candidates.find(item => Number(item.id) === Number(productId));
                 if (!p) return;
                 elements.modalTitle.textContent = "製品情報の編集";
                 elements.editName.value = p.name;
@@ -1942,7 +2045,7 @@
                 trackingEnabled: elements.editTracking.checked
             };
             if (state.editingId) {
-                const index = state.candidates.findIndex(p => p.id === state.editingId);
+                const index = state.candidates.findIndex(p => Number(p.id) === Number(state.editingId));
                 if (index !== -1) state.candidates[index] = { ...state.candidates[index], ...data };
             } else {
                 state.candidates.push({ id: Date.now(), ...data, count: 1 });
@@ -1953,24 +2056,35 @@
         }
 
         function deleteProduct(productId) {
-            if (confirm("この製品データを削除しますか？\n（候補リストから完全に削除されます）")) {
+            console.log("Delete product requested for ID:", productId);
+            const p = state.candidates.find(c => Number(c.id) === Number(productId));
+            const pName = p ? p.name : "この製品";
+            const confirmMessage = `「${pName}」をマスターデータから完全に削除しますか？\nこの操作は元に戻せません。打設リストやカレンダーからも消去されます。`;
+
+            // Native confirm blocks the main thread
+            if (window.confirm(confirmMessage)) {
+                const idToDelete = Number(productId);
+                console.log("Confirmed deletion for ID:", idToDelete);
+
                 // 候補リストから削除
-                state.candidates = state.candidates.filter(p => p.id !== productId);
+                state.candidates = state.candidates.filter(p => Number(p.id) !== idToDelete);
 
                 // 打設リストからも削除（整合性確保）
-                state.pourList = state.pourList.filter(p => p.originalId !== productId);
+                state.pourList = state.pourList.filter(p => Number(p.originalId) !== idToDelete);
 
                 // カレンダー設定からも削除
-                state.calendarProducts = state.calendarProducts.filter(id => id !== productId);
-                if (state.calendarStartDates[productId]) {
-                    delete state.calendarStartDates[productId];
+                state.calendarProducts = state.calendarProducts.filter(id => Number(id) !== idToDelete);
+                if (state.calendarStartDates[idToDelete]) {
+                    delete state.calendarStartDates[idToDelete];
                 }
 
                 saveState();
                 updateUI();
-                if (elements.calendarModal.classList.contains('hidden') === false) {
+                if (elements.calendarModal && !elements.calendarModal.classList.contains('hidden')) {
                     renderCalendar();
                 }
+            } else {
+                console.log("Deletion cancelled.");
             }
         }
 
@@ -2069,45 +2183,60 @@
         }
 
         function updateUI() {
-            let filteredCandidates = state.candidates.filter(p =>
-                p.name.toLowerCase().includes(state.searchQuery)
-            );
+            try {
+                if (!Array.isArray(state.candidates)) {
+                    console.warn("state.candidates is not an array. Resetting to empty.");
+                    state.candidates = [];
+                }
 
-            // Apply candidate list sorting
-            if (state.sortMode === 'weight') {
-                filteredCandidates.sort((a, b) => b.weight - a.weight);
-            } else if (state.sortMode === 'priority') {
-                const pRank = { '高': 3, '中': 2, '低': 1 };
-                filteredCandidates.sort((a, b) => (pRank[b.priority] || 0) - (pRank[a.priority] || 0));
+                let filteredCandidates = state.candidates.filter(p =>
+                    p && p.name && p.name.toLowerCase().includes(state.searchQuery || "")
+                );
+
+                // Apply candidate list sorting
+                if (state.sortMode === 'weight') {
+                    filteredCandidates.sort((a, b) => b.weight - a.weight);
+                } else if (state.sortMode === 'priority') {
+                    const pRank = { '高': 3, '中': 2, '低': 1 };
+                    filteredCandidates.sort((a, b) => (pRank[b.priority] || 0) - (pRank[a.priority] || 0));
+                }
+                // 'default' uses the state.candidates order
+
+                renderList('candidate', filteredCandidates);
+
+                // Sort pourList based on the order in the master candidate list
+                const sortedPourList = [...state.pourList].sort((a, b) => {
+                    const indexA = state.candidates.findIndex(c => Number(c.id) === Number(a.originalId));
+                    const indexB = state.candidates.findIndex(c => Number(c.id) === Number(b.originalId));
+                    return (indexA === -1 ? 9999 : indexA) - (indexB === -1 ? 9999 : indexB);
+                });
+
+                renderList('pour', sortedPourList);
+                const total = state.pourList.reduce((sum, p) => sum + (p.weight * p.count), 0);
+                elements.totalWeight.textContent = total.toLocaleString();
+                elements.goalDisplay.textContent = state.quota.toLocaleString();
+
+                const statsTotal = document.getElementById('stats-total-weight');
+                const statsAvg = document.getElementById('stats-avg-weight');
+                if (statsTotal) statsTotal.textContent = total.toLocaleString() + "kg";
+                if (statsAvg) {
+                    const historyDays = state.history ? state.history.length : 0;
+                    const avg = historyDays > 0 ? Math.round(state.history.reduce((s, h) => s + h.weight, 0) / historyDays) : 0;
+                    statsAvg.textContent = `${avg.toLocaleString()}kg`;
+                }
+
+                elements.candidateCount = document.getElementById('candidate-count');
+                elements.pourCountNum = document.getElementById('pour-count');
+
+                if (elements.candidateCount) elements.candidateCount.textContent = filteredCandidates.length;
+                if (elements.pourCountNum) elements.pourCountNum.textContent = state.pourList.reduce((sum, p) => sum + p.count, 0);
+
+                const per = Math.min((total / state.quota) * 100, 100);
+                elements.quotaGauge.style.width = `${per}%`;
+                elements.quotaGauge.className = 'gauge-fill' + (total >= state.quota ? ' goal-reached' : '');
+            } catch (e) {
+                console.error("updateUI crashed:", e);
             }
-            // 'default' uses the state.candidates order
-
-            renderList('candidate', filteredCandidates);
-
-            // Sort pourList based on the order in the master candidate list
-            const sortedPourList = [...state.pourList].sort((a, b) => {
-                const indexA = state.candidates.findIndex(c => c.id === a.originalId);
-                const indexB = state.candidates.findIndex(c => c.id === b.originalId);
-                // If not found in candidates (shouldn't happen), push to the end
-                const finalIndexA = indexA === -1 ? 9999 : indexA;
-                const finalIndexB = indexB === -1 ? 9999 : indexB;
-                return finalIndexA - finalIndexB;
-            });
-
-            renderList('pour', sortedPourList);
-            const total = state.pourList.reduce((sum, p) => sum + (p.weight * p.count), 0);
-            elements.totalWeight.textContent = total.toLocaleString();
-            elements.goalDisplay.textContent = state.quota.toLocaleString();
-
-            elements.candidateCount = document.getElementById('candidate-count');
-            elements.pourCountNum = document.getElementById('pour-count');
-
-            if (elements.candidateCount) elements.candidateCount.textContent = filteredCandidates.length;
-            if (elements.pourCountNum) elements.pourCountNum.textContent = state.pourList.reduce((sum, p) => sum + p.count, 0);
-
-            const per = Math.min((total / state.quota) * 100, 100);
-            elements.quotaGauge.style.width = `${per}%`;
-            elements.quotaGauge.className = 'gauge-fill' + (total >= state.quota ? ' goal-reached' : '');
         }
 
         function renderList(type, list) {
@@ -2128,7 +2257,11 @@
                     const isAdded = state.pourList.some(item => item.originalId === p.id);
                     if (isAdded) card.classList.add('added');
 
-                    card.onclick = () => moveToPour(p.id);
+                    card.onclick = (e) => {
+                        // Prevent triggering card click if an action button was clicked
+                        if (e.target.closest('.action-icon') || e.target.closest('button')) return;
+                        moveToPour(p.id);
+                    };
                     const feedback = isAdded ? '<span class="added-badge">✅ 追加済み</span>' : '';
                     const lowStockAlert = (p.trackingEnabled && p.stock <= 1) ? `<div class="stock-warning">鉄筋残数が残りわずかです</div>` : '';
 
@@ -2143,6 +2276,10 @@
                                 ${lowStockAlert}
                             </div>
                             <div class="card-actions">
+                                ${state.isSortingMode && state.sortMode === 'default' ? `
+                                    <button class="action-icon" style="background:#fef3c7; border:1px solid #fcd34d;" onclick="event.stopPropagation(); moveCandidate(${p.id}, -1)">🔼</button>
+                                    <button class="action-icon" style="background:#fef3c7; border:1px solid #fcd34d;" onclick="event.stopPropagation(); moveCandidate(${p.id}, 1)">🔽</button>
+                                ` : ''}
                                 <button class="action-icon" onclick="event.stopPropagation(); openEditModal(${p.id})">編集</button>
                                 <button class="action-icon delete" onclick="event.stopPropagation(); deleteProduct(${p.id})">削除</button>
                             </div>
@@ -2184,6 +2321,23 @@
             });
         }
 
+        function moveCandidate(productId, direction) {
+            const idx = state.candidates.findIndex(c => Number(c.id) === Number(productId));
+            if (idx === -1) return;
+
+            const newIdx = idx + direction;
+            if (newIdx < 0 || newIdx >= state.candidates.length) return;
+
+            // Swap
+            const temp = state.candidates[idx];
+            state.candidates[idx] = state.candidates[newIdx];
+            state.candidates[newIdx] = temp;
+
+            saveState();
+            updateUI();
+        }
+
+        window.moveCandidate = moveCandidate;
         window.updateQuantity = updateQuantity;
         window.moveToCandidate = moveToCandidate;
         window.openEditModal = openEditModal;
