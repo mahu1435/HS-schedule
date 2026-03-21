@@ -122,6 +122,7 @@
             display: flex;
             height: 100%;
             overflow: hidden;
+            position: relative;
         }
 
         .calendar-main {
@@ -161,10 +162,8 @@
         /* Responsive Adjustments */
         @media (max-width: 768px) {
             .cal-sidebar {
-                position: absolute;
-                z-index: 10;
-                height: 100%;
-                box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+                width: 100% !important;
+                min-width: 100% !important;
             }
         }
 
@@ -371,9 +370,9 @@
 
         /* Product Card Added State */
         .product-card.added {
-            opacity: 0.6;
+            opacity: 0.75;
             background: #f1f5f9;
-            pointer-events: none;
+            border-left-color: #10b981;
         }
 
         .added-badge {
@@ -384,6 +383,18 @@
             border-radius: 4px;
             font-weight: 800;
             border: 1px solid #86efac;
+        }
+
+        .action-icon.cancel-add {
+            background: #fff1f2;
+            border-color: #fecdd3;
+            color: #e11d48;
+            font-weight: 800;
+        }
+        .action-icon.cancel-add:hover {
+            background: #ffe4e6;
+            border-color: #e11d48;
+            color: #be123c;
         }
 
         .form-checkbox {
@@ -1037,7 +1048,8 @@
         }
 
         .calendar-bar {
-            height: 18px;
+            height: 20px;
+            min-height: 20px;
             color: white;
             font-size: 0.65rem;
             margin-top: 2px;
@@ -1057,6 +1069,7 @@
             text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
             /* Reset any padding/margin that might cause wrapping */
             box-sizing: border-box;
+            border-radius: 3px;
         }
 
         .calendar-bar.start-day {
@@ -1064,18 +1077,19 @@
             border-bottom-left-radius: 4px;
             margin-left: 0;
             width: 100%;
+            font-size: 0.6rem;
         }
 
         .calendar-bar.end-day {
-            clip-path: polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%);
-            padding-right: 10px;
-            width: 100%;
+            background-color: #ef4444 !important;
+            border: 2px solid #b91c1c !important;
+            font-weight: 900;
+            padding-right: 2px;
         }
 
         .calendar-bar.start-day.end-day {
             border-top-left-radius: 4px;
             border-bottom-left-radius: 4px;
-            clip-path: polygon(0% 0%, calc(100% - 8px) 0%, 100% 50%, calc(100% - 8px) 100%, 0% 100%);
         }
 
         .calendar-bar.moved {
@@ -1204,6 +1218,536 @@
             background: #fee2e2;
             color: var(--danger);
         }
+
+        /* Calendar Sidebar - overlay panel */
+        .cal-sidebar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 62%;
+            min-width: 420px;
+            background: white;
+            border-left: 1px solid var(--border-color);
+            box-shadow: -6px 0 28px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 20;
+        }
+
+        .cal-sidebar.hidden-sidebar {
+            transform: translateX(105%);
+        }
+
+        .cal-sidebar-backdrop {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.3);
+            z-index: 19;
+            display: none;
+            cursor: pointer;
+        }
+        .cal-sidebar-backdrop.visible { display: block; }
+
+        .cal-sidebar-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 800;
+            font-size: 0.9rem;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .cal-sidebar-header .sidebar-close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 6px;
+            padding: 4px 10px;
+            transition: background 0.2s;
+        }
+        .cal-sidebar-header .sidebar-close-btn:hover { background: rgba(255,255,255,0.35); }
+
+        .cal-sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        /* Inline rebar edit panel in sidebar */
+        .pc-inline-edit {
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: #f0f7ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+        }
+        .pc-inline-edit label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 6px;
+        }
+        .pc-inline-edit-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pc-inline-edit input[type="number"] {
+            flex: 1;
+            padding: 7px 10px;
+            border: 1px solid #93c5fd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-align: right;
+            outline-color: var(--primary);
+        }
+        .pc-save-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .pc-save-btn:hover { background: var(--primary-hover); }
+        .pc-edit-toggle-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .pc-edit-toggle-btn:hover, .pc-edit-toggle-btn.active {
+            background: #eff6ff;
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .cal-product-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 10px;
+            transition: box-shadow 0.2s;
+        }
+        .cal-product-card:hover { box-shadow: var(--shadow-md); }
+
+        .cal-product-card.active {
+            border-color: var(--primary);
+            border-left: 4px solid var(--primary);
+            background: #f8fbff;
+        }
+
+        .cal-product-card .pc-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .cal-product-card .pc-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 900;
+            padding: 0 5px;
+            flex-shrink: 0;
+        }
+
+        .cal-product-card .pc-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            color: var(--text-primary);
+        }
+
+        .cal-product-card .pc-meta {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            line-height: 1.6;
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+
+        .cal-product-card .pc-meta strong {
+            color: var(--text-primary);
+            font-weight: 800;
+        }
+
+        .cal-product-card .pc-lastday {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #dc2626;
+            margin-bottom: 6px;
+        }
+
+        .cal-product-card .pc-toggle {
+            width: 100%;
+            padding: 5px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .cal-product-card .pc-toggle.add {
+            background: var(--primary);
+            color: white;
+        }
+
+        .cal-product-card .pc-toggle.remove {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        @media (max-width: 768px) {
+            .cal-sidebar {
+                width: 100% !important;
+                min-width: 100% !important;
+                top: 0;
+                max-height: none;
+            }
+        }
+        /* Candidate Modal Tabs */
+        .candidate-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            background: #f8fafc;
+            flex-shrink: 0;
+        }
+        .candidate-tab {
+            padding: 12px 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: -2px;
+        }
+        .candidate-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: white;
+        }
+        .candidate-tab:hover:not(.active) {
+            background: #e2e8f0;
+            color: var(--text-primary);
+        }
+        .tab-panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .tab-panel.active {
+            display: flex;
+        }
+        .rebar-settings-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .rebar-settings-table th {
+            background: #f8fafc;
+            padding: 10px 12px;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--text-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .rebar-settings-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        .rebar-settings-table tr:hover { background: #f8fafc; }
+        .cal-action-btn {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 4px;
+        }
+        .cal-action-btn.add-btn {
+            background: var(--primary);
+            color: white;
+        }
+        .cal-action-btn.add-btn:hover { background: var(--primary-hover); }
+        .cal-action-btn.remove-btn {
+            background: #fee2e2;
+            color: var(--danger);
+            border: 1px solid #fecaca;
+        }
+        .cal-action-btn.remove-btn:hover { background: var(--danger); color: white; }
+        .not-tracked-hint {
+            padding: 12px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: #92400e;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        /* Swipe-to-delete: applied to card itself, no wrapper */
+        .product-card.pour-swipeable {
+            touch-action: pan-y;
+        }
+
+        /* Pour list preset button */
+        .preset-btn {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 4px 9px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .preset-btn.save { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+        .preset-btn.load { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+        .preset-btn:active { opacity: 0.7; }
+
+        /* Remaining weight display */
+        .remaining-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .remaining-display .remaining-val { color: var(--primary); font-weight: 900; }
+        .remaining-display.achieved { color: var(--accent); font-weight: 800; }
+
+        /* Weight preview bar in candidate modal */
+        .weight-preview-bar {
+            padding: 10px 16px;
+            background: #f8fafc;
+            border-top: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            gap: 12px;
+        }
+        .wp-total { font-size: 1.05rem; font-weight: 900; color: var(--primary); }
+        .wp-label { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); }
+        .wp-remaining { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); }
+        .wp-remaining.goal-reached { color: var(--accent); font-weight: 800; }
+
+        /* Undo Toast */
+        .undo-toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(120px);
+            background: #1e293b;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-width: 260px;
+            max-width: 90vw;
+            transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .undo-toast.visible {
+            transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+        }
+        .undo-toast-msg { flex: 1; line-height: 1.4; font-size: 0.8rem; }
+        .undo-toast-progress {
+            position: absolute;
+            bottom: 0; left: 0;
+            height: 3px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+        .undo-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+        .undo-btn:hover { background: #2563eb; }
+
+        /* Quantity picker bottom sheet */
+        .qty-picker-backdrop {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15,23,42,0.4);
+            z-index: 450;
+            display: none;
+        }
+        .qty-picker-backdrop.visible { display: block; }
+        .qty-picker-sheet {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            width: 100%;
+            max-width: 480px;
+            transform: translateX(-50%) translateY(100%);
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 8px 20px 36px;
+            z-index: 451;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.2);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .qty-picker-sheet.open { transform: translateX(-50%) translateY(0); }
+        .qty-sheet-handle {
+            width: 40px; height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            margin: 12px auto 16px;
+        }
+        .qty-sheet-label { font-size: 0.72rem; color: var(--text-secondary); font-weight: 700; margin-bottom: 4px; }
+        .qty-sheet-name { font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin-bottom: 2px; line-height: 1.4; }
+        .qty-sheet-weight { font-size: 0.8rem; color: var(--primary); font-weight: 700; margin-bottom: 20px; }
+        .qty-sheet-counter {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+        .qty-sheet-btn {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            background: white;
+            font-size: 1.6rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.15s;
+            color: var(--text-primary);
+        }
+        .qty-sheet-btn:active { transform: scale(0.88); background: #f1f5f9; }
+        .qty-sheet-num { font-size: 3rem; font-weight: 900; color: var(--primary); min-width: 72px; text-align: center; }
+        .qty-sheet-actions { display: flex; gap: 10px; }
+
+        /* Priority border colors */
+        .product-card.pri-high { border-left-color: #dc2626; }
+        .product-card.pri-medium { border-left-color: #f59e0b; }
+        .product-card.pri-low { border-left-color: #10b981; }
+
+        /* Production done visual on card */
+        .product-card.production-done {
+            opacity: 0.55;
+            background: #f8fafc;
+            border-left-color: #94a3b8 !important;
+        }
+        .product-card.production-done .product-name {
+            text-decoration: line-through;
+            color: #94a3b8 !important;
+        }
+
+        /* Card detail bottom sheet */
+        .cds-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .cds-row:last-of-type { border-bottom: none; }
+        .cds-row label { flex: 1; font-size: 0.9rem; font-weight: 700; color: var(--text-primary); }
+        .cds-row input[type="number"] {
+            width: 80px;
+            padding: 6px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        .cds-row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
+        .cds-save-btn {
+            padding: 6px 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .cds-save-btn:active { opacity: 0.8; }
+
+        /* Pour list sort */
+        .pour-sort-select {
+            padding: 4px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: white;
+            color: var(--text-secondary);
+            cursor: pointer;
+            outline-color: var(--primary);
+        }
     </style>
     <!-- Firebase SDK (Compat v9) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -1266,6 +1810,9 @@
                     <div class="gauge-container">
                         <div id="quota-gauge" class="gauge-fill" style="width: 0%"></div>
                     </div>
+                    <div id="remaining-display" class="remaining-display">
+                        <span id="remaining-text">目標まであと <span id="remaining-kg" class="remaining-val">26,000</span> kg</span>
+                    </div>
                 </div>
             </header>
 
@@ -1273,7 +1820,17 @@
                 <section id="pour-section" class="list-wrapper pour-section expanded">
                     <div class="section-header">
                         <h2 class="section-title">当日打設リスト <span id="pour-count" class="badge">0</span></h2>
-                        <div id="open-candidate-list" class="action-icon">＋ 製品追加</div>
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                            <select id="pour-sort-select" class="pour-sort-select" onchange="setPourSort(this.value)">
+                                <option value="list">リスト順（標準）</option>
+                                <option value="added">追加順</option>
+                                <option value="priority">優先度順</option>
+                                <option value="weight">重量順↓</option>
+                            </select>
+                            <button class="preset-btn save" onclick="savePourPreset()">💾 保存</button>
+                            <button class="preset-btn load" onclick="loadPourPreset()">📋 読込</button>
+                            <div id="open-candidate-list" class="action-icon">＋ 製品追加</div>
+                        </div>
                     </div>
                     <div id="pour-list" class="card-list" style="flex: 1; overflow-y: auto;">
                         <div class="empty-state">＋ボタンから製品を追加してください</div>
@@ -1293,29 +1850,31 @@
                 <div class="calendar-layout">
                     <div class="calendar-main">
                         <div class="calendar-controls"
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <button id="open-rebar-mgmt-btn" class="btn-primary"
-                                    style="background-color: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold;">
-                                    ⚙️ 鉄筋残数設定
-                                </button>
-                                <div class="calendar-legend" style="display:flex; gap:12px; font-size:0.7rem;">
-                                    <span style="display:flex; align-items:center; gap:4px;"><i
-                                            style="width:10px; height:10px; background:#fef2f2; border:1px solid #fee2e2; display:inline-block;"></i>
-                                        土日</span>
-                                    <span style="display:flex; align-items:center; gap:4px;"><i
-                                            style="width:10px; height:10px; background:#fef3c7; border:1px solid #fde68a; display:inline-block;"></i>
-                                        祝日</span>
-                                    <span style="display:flex; align-items:center; gap:4px;"><i
-                                            style="width:10px; height:10px; border:2px solid #ef4444; display:inline-block;"></i>
-                                        在庫切れ</span>
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 8px;">
+                            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                                <button id="toggle-sidebar-btn" class="btn-primary" style="background:var(--primary); color:white; border:none; padding:8px 16px; border-radius:8px; font-size:0.82rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;">📋 製品管理パネルを開く</button>
+                                <div class="calendar-legend" style="display:flex; gap:10px; font-size:0.72rem; align-items:center;">
+                                    <span style="display:flex; align-items:center; gap:4px;"><i style="width:10px; height:10px; background:#fef2f2; border:1px solid #fee2e2; display:inline-block; border-radius:2px;"></i>土日</span>
+                                    <span style="display:flex; align-items:center; gap:4px;"><i style="width:10px; height:10px; background:#fef3c7; border:1px solid #fde68a; display:inline-block; border-radius:2px;"></i>祝日</span>
+                                    <span style="display:flex; align-items:center; gap:4px;"><i style="width:10px; height:10px; border:2px solid #ef4444; display:inline-block; border-radius:2px;"></i>在庫切れ</span>
                                 </div>
                             </div>
-                            <div style="font-size:0.75rem; color:var(--text-secondary); font-weight:600;">
-                                日付をクリックで開始日設定 / バーをドラッグして移動
+                            <div style="font-size:0.72rem; color:var(--text-secondary); font-weight:600; white-space:nowrap;">
+                                ドラッグ: 開始日変更 / クリック: スキップ
                             </div>
                         </div>
                         <div id="calendar-view" class="calendar-view"></div>
+                    </div>
+                    <!-- Backdrop -->
+                    <div id="cal-sidebar-backdrop" class="cal-sidebar-backdrop" onclick="toggleCalendarSidebar()"></div>
+                    <div class="cal-sidebar hidden-sidebar" id="cal-sidebar">
+                        <div class="cal-sidebar-header">
+                            <span>📋 製品管理パネル <span id="sidebar-product-count" style="font-size:0.75rem; font-weight:600; background:rgba(255,255,255,0.25); padding:2px 8px; border-radius:10px; margin-left:6px;"></span></span>
+                            <button id="close-sidebar-btn" class="sidebar-close-btn">✕ 閉じる</button>
+                        </div>
+                        <div class="cal-sidebar-body">
+                            <div id="cal-product-list"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1325,24 +1884,69 @@
         <div id="candidate-modal" class="modal modal-full hidden">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="section-title">製品の選択 <span id="candidate-count" class="badge">0</span></h2>
-                    <div style="display: flex; gap: 8px;">
+                    <h2 class="section-title" id="candidate-modal-title">製品の選択 <span id="candidate-count" class="badge">0</span></h2>
+                    <div id="candidate-list-actions" style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <button id="modal-sort-toggle" class="btn-text">並べ替え: 閉</button>
                         <button id="modal-add-new" class="btn-text">+ 新規登録</button>
+                        <button onclick="document.getElementById('csv-import-input').click()" class="btn-text" style="color: var(--accent); border-color: var(--accent);">📥 CSV取込</button>
+                        <input type="file" id="csv-import-input" accept=".csv,text/csv" style="display:none;" onchange="importProductCSV(this)">
                         <button id="close-candidate-modal" class="btn-secondary" style="padding: 8px 16px;">閉じる</button>
                     </div>
+                    <div id="rebar-tab-actions" style="display: none; gap: 8px;">
+                        <button id="close-candidate-modal-rebar" class="btn-secondary" style="padding: 8px 16px;">閉じる</button>
+                    </div>
                 </div>
-                <div class="search-container" style="display: flex; gap: 8px; align-items: center;">
-                    <input type="text" id="search-input" placeholder="製品名で検索..." style="flex: 2;">
-                    <select id="sort-select"
-                        style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.9rem;">
-                        <option value="default">標準順</option>
-                        <option value="weight">重量順 ↓</option>
-                        <option value="priority">優先度順 ↓</option>
-                    </select>
+                <div class="candidate-tabs">
+                    <button class="candidate-tab active" id="ctab-list" onclick="switchCandidateTab('list')">📋 製品リスト</button>
+                    <button class="candidate-tab" id="ctab-rebar" onclick="switchCandidateTab('rebar')">⚙️ 鉄筋在庫設定</button>
                 </div>
-                <div id="candidate-list" class="card-list">
-                    <div class="empty-state">製品データがありません</div>
+                <!-- List Panel -->
+                <div id="candidate-list-panel" class="tab-panel active">
+                    <div class="search-container" style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="search-input" placeholder="製品名で検索..." style="flex: 2;">
+                        <select id="sort-select"
+                            style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 0.9rem;">
+                            <option value="default">標準順</option>
+                            <option value="weight">重量順 ↓</option>
+                            <option value="priority">優先度順 ↓</option>
+                        </select>
+                    </div>
+                    <div id="candidate-list" class="card-list">
+                        <div class="empty-state">製品データがありません</div>
+                    </div>
+                </div>
+                <!-- Weight preview bar (bottom of list panel) -->
+                <div class="weight-preview-bar" id="weight-preview-bar">
+                    <div>
+                        <div class="wp-label">現在の打設合計</div>
+                        <div class="wp-total"><span id="modal-total-weight">0</span> kg</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="wp-label">目標</div>
+                        <div style="font-size:0.82rem; font-weight:700; color:var(--text-secondary);"><span id="modal-goal-weight">26,000</span> kg</div>
+                    </div>
+                    <div style="text-align:right; min-width:100px;">
+                        <div id="modal-remaining-text" class="wp-remaining">残り <strong id="modal-remaining-kg">26,000</strong> kg</div>
+                    </div>
+                </div>
+                <!-- Rebar Settings Panel -->
+                <div id="rebar-settings-panel" class="tab-panel">
+                    <div style="padding: 12px 16px; background: #f0f7ff; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">
+                        <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6;">製品ごとの鉄筋在庫数を編集できます。在庫が0になると打設リストでグレーアウトされます。<br><span style="font-size:0.78rem; color:#2563eb;">※ 製品編集で「鉄筋在庫管理を有効にする」をONにした製品のみ表示されます。</span></p>
+                    </div>
+                    <div style="flex: 1; overflow-y: auto; padding: 16px;">
+                        <table class="rebar-settings-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center; width:40px;">No</th>
+                                    <th style="text-align:left;">製品名</th>
+                                    <th style="text-align:right; width:120px;">在庫数</th>
+                                    <th style="text-align:center; width:100px;">カレンダー</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rebar-settings-body"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1381,15 +1985,10 @@
                         <table id="history-table" style="width: 100%; border-collapse: collapse;">
                             <thead>
                                 <tr>
-                                    <th
-                                        style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">
-                                        日付</th>
-                                    <th
-                                        style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">
-                                        重量</th>
-                                    <th
-                                        style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">
-                                        件数</th>
+                                    <th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">日付</th>
+                                    <th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">重量</th>
+                                    <th style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color);">件数</th>
+                                    <th style="text-align: center; padding: 10px; border-bottom: 2px solid var(--border-color);">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="history-body"></tbody>
@@ -1399,40 +1998,6 @@
             </div>
         </div>
 
-        <!-- Standalone Rebar Management Modal -->
-        <div id="rebar-modal" class="modal modal-full hidden">
-            <div class="modal-content" style="max-width: 600px;">
-                <div class="modal-header">
-                    <h2 class="section-title">⚙️ 鉄筋残数設定</h2>
-                    <button id="close-rebar-modal" class="btn-secondary" style="padding: 8px 16px;">閉じる</button>
-                </div>
-                <div style="padding: 15px;">
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px;">
-                        製品ごとの鉄筋在庫数を直接編集できます。在庫が0になるとリストでグレーアウトされます。</p>
-                    <div style="max-height: 550px; overflow-y: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead style="position: sticky; top: 0; background: #fff; z-index: 1;">
-                                <tr>
-                                    <th
-                                        style="padding: 10px; border-bottom: 2px solid var(--border-color); font-size: 0.8rem; text-align:center;">
-                                        No</th>
-                                    <th
-                                        style="text-align: left; padding: 10px; border-bottom: 2px solid var(--border-color); font-size: 0.8rem;">
-                                        製品名</th>
-                                    <th
-                                        style="text-align: right; padding: 10px; border-bottom: 2px solid var(--border-color); font-size: 0.8rem;">
-                                        在庫数</th>
-                                    <th
-                                        style="text-align: center; padding: 10px; border-bottom: 2px solid var(--border-color); font-size: 0.8rem;">
-                                        操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rebar-modal-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <div id="edit-modal" class="modal hidden">
             <div class="modal-content">
@@ -1471,6 +2036,58 @@
             <div class="alert-box">⚠️ <span id="alert-message">鉄筋不足です！</span></div>
         </div>
 
+    </div>
+
+    <!-- Undo Toast -->
+    <div id="undo-toast" class="undo-toast">
+        <span class="undo-toast-msg" id="undo-toast-msg">製品を追加しました</span>
+        <button class="undo-btn" onclick="undoLastAdd()">↩ 取り消し</button>
+        <div class="undo-toast-progress" id="undo-toast-progress" style="width:100%;"></div>
+    </div>
+
+    <!-- Card Detail Bottom Sheet -->
+    <div id="cds-backdrop" class="qty-picker-backdrop" onclick="closeCardDetail()"></div>
+    <div id="cds-sheet" class="qty-picker-sheet">
+        <div class="qty-sheet-handle"></div>
+        <div class="qty-sheet-label">打設カード設定</div>
+        <div class="qty-sheet-name" id="cds-name">製品名</div>
+        <div style="margin-top:12px;">
+            <div class="cds-row">
+                <label>生産終了</label>
+                <input type="checkbox" id="cds-done-check" onchange="toggleCardDone()">
+            </div>
+            <div class="cds-row" id="cds-rebar-row" style="display:none;">
+                <label>鉄筋残数（本）</label>
+                <input type="number" id="cds-rebar-input" min="0" placeholder="0">
+                <button class="cds-save-btn" onclick="saveCardRebar()">保存</button>
+            </div>
+            <div class="cds-row" id="cds-qty-row" style="display:none;">
+                <label>製造数（✖️）</label>
+                <input type="number" id="cds-qty-input" min="1" placeholder="1">
+                <button class="cds-save-btn" onclick="saveCardQty()">適用</button>
+            </div>
+        </div>
+        <div style="margin-top:16px;">
+            <button class="btn-secondary" style="width:100%; padding:12px;" onclick="closeCardDetail()">閉じる</button>
+        </div>
+    </div>
+
+    <!-- Quantity Picker Bottom Sheet -->
+    <div id="qty-picker-backdrop" class="qty-picker-backdrop" onclick="closeQtyPicker()"></div>
+    <div id="qty-picker-sheet" class="qty-picker-sheet">
+        <div class="qty-sheet-handle"></div>
+        <div class="qty-sheet-label">追加する製品</div>
+        <div class="qty-sheet-name" id="qty-sheet-name">製品名</div>
+        <div class="qty-sheet-weight" id="qty-sheet-weight">0 kg × 1 = 0 kg</div>
+        <div class="qty-sheet-counter">
+            <button class="qty-sheet-btn" onclick="adjustQty(-1)">－</button>
+            <div class="qty-sheet-num" id="qty-sheet-num">1</div>
+            <button class="qty-sheet-btn" onclick="adjustQty(1)">＋</button>
+        </div>
+        <div class="qty-sheet-actions">
+            <button class="btn-secondary" style="flex:1; padding:14px;" onclick="closeQtyPicker()">キャンセル</button>
+            <button class="btn-primary" style="flex:2; padding:14px; font-size:1rem;" onclick="confirmQtyAdd()">＋ 打設リストに追加</button>
+        </div>
     </div>
 
     <script>
@@ -1545,6 +2162,7 @@
             candidates: JSON.parse(JSON.stringify(defaultCandidates)),
             masterCandidates: [], // Newly registered products go here
             pourList: [],
+            pourListPreset: [],
             quota: 26000,
             history: [],
             lastProcessedDate: "",
@@ -1553,7 +2171,8 @@
             searchQuery: "",
             calendarStartDates: {},
             calendarProducts: [],
-            calendarProductSkips: {} // { productId: ["YYYY-MM-DD", ...] }
+            calendarProductSkips: {}, // { productId: ["YYYY-MM-DD", ...] }
+            pourSortMode: 'list'
         };
 
         // --- Firebase Configuration ---
@@ -1659,6 +2278,7 @@
             const dataToSave = {
                 masterCandidates: state.masterCandidates,
                 pourList: state.pourList,
+                pourListPreset: state.pourListPreset || [],
                 quota: state.quota,
                 history: state.history,
                 lastProcessedDate: state.lastProcessedDate,
@@ -1666,7 +2286,8 @@
                 calendarProducts: state.calendarProducts,
                 calendarProductSkips: state.calendarProductSkips || {},
                 sortMode: state.sortMode,
-                isSortingMode: state.isSortingMode
+                isSortingMode: state.isSortingMode,
+                pourSortMode: state.pourSortMode || 'list'
             };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
             syncToCloud();
@@ -1679,6 +2300,7 @@
                     const parsed = JSON.parse(saved);
                     state.masterCandidates = parsed.masterCandidates || [];
                     state.pourList = parsed.pourList || [];
+                    state.pourListPreset = parsed.pourListPreset || [];
                     state.quota = parsed.quota || 26000;
                     state.history = parsed.history || [];
                     state.lastProcessedDate = parsed.lastProcessedDate || "";
@@ -1687,6 +2309,7 @@
                     state.calendarProductSkips = parsed.calendarProductSkips || {};
                     state.sortMode = parsed.sortMode || "default";
                     state.isSortingMode = parsed.isSortingMode || false;
+                    state.pourSortMode = parsed.pourSortMode === 'default' ? 'list' : (parsed.pourSortMode || 'list');
 
                     // Rebuild candidates by merging defaults with master data
                     mergeMasterCandidates();
@@ -1746,8 +2369,9 @@
             calendarView: document.getElementById('calendar-view'),
             calProductList: document.getElementById('cal-product-list'),
             syncStatus: document.getElementById('sync-status'),
-            rebarModal: document.getElementById('rebar-modal'),
-            rebarModalBody: document.getElementById('rebar-modal-body'),
+            rebarModal: null,
+            rebarModalBody: null,
+            rebarSettingsBody: document.getElementById('rebar-settings-body'),
             performanceChart: null // Will hold chart instance
         };
 
@@ -1838,11 +2462,11 @@
             const openCalendarBtn = document.getElementById('open-calendar-btn');
             if (openCalendarBtn) openCalendarBtn.onclick = openCalendar;
 
-            const openRebarBtn = document.getElementById('open-rebar-mgmt-btn');
-            if (openRebarBtn) openRebarBtn.onclick = openRebarModal;
-
-            const closeRebarBtn = document.getElementById('close-rebar-modal');
-            if (closeRebarBtn) closeRebarBtn.onclick = () => elements.rebarModal.classList.add('hidden');
+            const closeRebarAlt = document.getElementById('close-candidate-modal-rebar');
+            if (closeRebarAlt) closeRebarAlt.onclick = () => {
+                elements.candidateModal.classList.add('hidden');
+                switchCandidateTab('list');
+            };
 
             const headerAddBtn = document.getElementById('header-add-product-btn');
             if (headerAddBtn) {
@@ -1862,6 +2486,9 @@
             if (toggleSidebarBtn) {
                 toggleSidebarBtn.onclick = toggleCalendarSidebar;
             }
+
+            const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+            if (closeSidebarBtn) closeSidebarBtn.onclick = toggleCalendarSidebar;
 
             const closeEditBtn = document.getElementById('close-edit');
             if (closeEditBtn) closeEditBtn.onclick = () => elements.editModal.classList.add('hidden');
@@ -1901,49 +2528,57 @@
         }
 
         function openRebarModal() {
-            renderRebarModalTable();
-            elements.rebarModal.classList.remove('hidden');
+            // Open candidate modal on rebar tab
+            elements.candidateModal.classList.remove('hidden');
+            switchCandidateTab('rebar');
         }
 
-        function renderRebarModalTable() {
-            const body = elements.rebarModalBody;
+        function renderRebarInCandidateModal() {
+            const body = document.getElementById('rebar-settings-body');
             if (!body) return;
             body.innerHTML = '';
 
             const tracked = state.candidates.filter(c => c.trackingEnabled);
 
             if (tracked.length === 0) {
-                body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-secondary);">追跡設定中の製品がありません</td></tr>';
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-secondary);">追跡設定中の製品がありません<br><small style="font-size:0.75rem;">製品編集で「鉄筋在庫管理を有効にする」をONにしてください</small></td></tr>';
                 return;
             }
 
             tracked.forEach((p, index) => {
                 const tr = document.createElement('tr');
                 const isFinished = p.stock <= 0;
-                tr.className = isFinished ? 'finished-row' : '';
+                if (isFinished) tr.style.background = '#fff5f5';
 
                 const displayNo = index + 1;
-                const isCalEnabled = state.calendarProducts.includes(p.id);
+                const isCalEnabled = (state.calendarProducts || []).includes(p.id);
 
                 tr.innerHTML = `
-                    <td style="padding:10px; border-bottom:1px solid var(--border-color); text-align:center; font-weight:bold; color:var(--primary);">${displayNo}</td>
-                    <td style="padding:10px; border-bottom:1px solid var(--border-color); font-size:0.8rem; font-weight:600;">${p.name}</td>
-                    <td style="padding:10px; border-bottom:1px solid var(--border-color); text-align:right;">
-                        <input type="number" value="${p.stock}" id="rebar-val-${p.id}" 
-                            style="width:65px; padding:4px; border:1px solid var(--border-color); border-radius:4px; text-align:right; font-size:0.85rem;">
-                        <span style="font-size:0.7rem; color:var(--text-secondary);">本</span>
-                        <button onclick="quickUpdateRebar(${p.id})" 
-                            style="background:var(--primary); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer; margin-left:5px;">保存</button>
+                    <td style="text-align:center; font-weight:800; color:var(--primary); font-size:0.85rem;">${displayNo}</td>
+                    <td style="font-size:0.8rem; font-weight:600; line-height:1.4;">${p.name}${isFinished ? ' <span style="color:#dc2626;font-size:0.7rem;">(在庫切れ)</span>' : ''}</td>
+                    <td style="text-align:right;">
+                        <div style="display:flex; align-items:center; justify-content:flex-end; gap:6px;">
+                            <input type="number" value="${p.stock}" id="rebar-val-${p.id}"
+                                style="width:60px; padding:5px 6px; border:1px solid var(--border-color); border-radius:6px; text-align:right; font-size:0.85rem; font-weight:700;">
+                            <span style="font-size:0.72rem; color:var(--text-secondary);">本</span>
+                            <button onclick="quickUpdateRebar(${p.id})"
+                                style="background:var(--primary); color:white; border:none; padding:5px 10px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer; white-space:nowrap;">保存</button>
+                        </div>
                     </td>
-                    <td style="padding:10px; border-bottom:1px solid var(--border-color); text-align:center;">
-                        <button onclick="toggleCalendarProduct(${p.id})" 
-                            style="background:${isCalEnabled ? '#10b981' : '#cbd5e1'}; color:white; border:none; padding:6px 10px; border-radius:4px; font-size:0.75rem; cursor:pointer; min-width:80px;">
-                            ${isCalEnabled ? '表示中' : '追加'}
+                    <td style="text-align:center;">
+                        <button onclick="toggleCalendarProduct(${p.id})"
+                            class="cal-action-btn ${isCalEnabled ? 'remove-btn' : 'add-btn'}" style="width:auto; margin:0; padding:5px 10px;">
+                            ${isCalEnabled ? '✕ 削除' : '＋ 追加'}
                         </button>
                     </td>
                 `;
                 body.appendChild(tr);
             });
+        }
+
+        // Keep for backward compatibility
+        function renderRebarModalTable() {
+            renderRebarInCandidateModal();
         }
 
         function switchMgmtTab(tabId) {
@@ -2062,6 +2697,36 @@
             });
         }
 
+        function switchCandidateTab(tab) {
+            const listPanel = document.getElementById('candidate-list-panel');
+            const rebarPanel = document.getElementById('rebar-settings-panel');
+            const ctabList = document.getElementById('ctab-list');
+            const ctabRebar = document.getElementById('ctab-rebar');
+            const listActions = document.getElementById('candidate-list-actions');
+            const rebarActions = document.getElementById('rebar-tab-actions');
+            const title = document.getElementById('candidate-modal-title');
+
+            if (tab === 'list') {
+                listPanel.classList.add('active');
+                rebarPanel.classList.remove('active');
+                ctabList.classList.add('active');
+                ctabRebar.classList.remove('active');
+                if (listActions) listActions.style.display = 'flex';
+                if (rebarActions) rebarActions.style.display = 'none';
+                if (title) title.innerHTML = '製品の選択 <span id="candidate-count" class="badge">' + (state.candidates ? state.candidates.length : 0) + '</span>';
+            } else {
+                listPanel.classList.remove('active');
+                rebarPanel.classList.add('active');
+                ctabList.classList.remove('active');
+                ctabRebar.classList.add('active');
+                if (listActions) listActions.style.display = 'none';
+                if (rebarActions) rebarActions.style.display = 'flex';
+                if (title) title.innerHTML = '⚙️ 鉄筋在庫設定';
+                renderRebarInCandidateModal();
+            }
+        }
+        window.switchCandidateTab = switchCandidateTab;
+
         window.quickUpdateRebar = (id) => {
             const input = document.getElementById(`rebar-val-${id}`);
             const newVal = parseInt(input.value) || 0;
@@ -2079,8 +2744,12 @@
 
                 saveState();
                 showAlert(`${target.name} の在庫を ${newVal}本 に更新しました。`);
-                renderRebarModalTable();
+                renderRebarInCandidateModal();
                 updateUI();
+                if (!elements.calendarModal.classList.contains('hidden')) {
+                    renderCalendarProductPanel();
+                    renderCalendar();
+                }
             }
         };
 
@@ -2090,15 +2759,44 @@
             list.innerHTML = '';
 
             let totalWeightAllTime = 0;
-            state.history.forEach(h => {
+
+            // Today's current data (in-progress row)
+            const todayTotal = state.pourList.reduce((s, p) => s + (p.weight * p.count), 0);
+            const todayCount = state.pourList.reduce((s, p) => s + p.count, 0);
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            if (todayTotal > 0 || state.pourList.length > 0) {
+                const todayTr = document.createElement('tr');
+                todayTr.style.background = '#eff6ff';
+                todayTr.innerHTML = `
+                    <td style="padding:10px; border-bottom:1px solid var(--border-color); font-weight:700; color:var(--primary);">${todayStr} <span style="font-size:0.7rem; background:#dbeafe; color:#1d4ed8; padding:1px 6px; border-radius:4px; margin-left:4px;">本日</span></td>
+                    <td style="padding:10px; border-bottom:1px solid var(--border-color); font-weight:700; color:var(--primary);">${todayTotal.toLocaleString()}kg</td>
+                    <td style="padding:10px; border-bottom:1px solid var(--border-color);">${todayCount}個</td>
+                    <td style="padding:10px; border-bottom:1px solid var(--border-color); text-align:center;">
+                        <button onclick="finalizeToday()" style="background:#2563eb; color:white; border:none; padding:4px 10px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">本日確定</button>
+                    </td>
+                `;
+                list.appendChild(todayTr);
+            }
+
+            const rows = [...state.history].reverse(); // Newest first
+            rows.forEach((h, revIdx) => {
+                const origIdx = state.history.length - 1 - revIdx;
                 totalWeightAllTime += h.weight || 0;
+                const hasDetails = h.details && h.details.length > 0;
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td style="padding:10px; border-bottom:1px solid var(--border-color);">${h.date}</td>
                     <td style="padding:10px; border-bottom:1px solid var(--border-color);">${(h.weight || 0).toLocaleString()}kg</td>
                     <td style="padding:10px; border-bottom:1px solid var(--border-color);">${h.count || 0}個</td>
+                    <td style="padding:10px; border-bottom:1px solid var(--border-color); text-align:center;">
+                        <div style="display:flex; gap:6px; justify-content:center;">
+                            <button onclick="openHistoryEdit(${origIdx})" style="background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; padding:4px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">編集</button>
+                            ${hasDetails ? `<button onclick="restoreFromHistory(${origIdx})" style="background:#dcfce7; color:#15803d; border:1px solid #86efac; padding:4px 8px; border-radius:6px; font-size:0.72rem; font-weight:700; cursor:pointer;">再追加</button>` : ''}
+                        </div>
+                    </td>
                 `;
-                list.insertBefore(tr, list.firstChild); // Newest first
+                list.appendChild(tr);
             });
 
             document.getElementById('stats-total-weight').textContent = `${totalWeightAllTime.toLocaleString()}kg`;
@@ -2108,6 +2806,73 @@
             elements.historyModal.classList.remove('hidden');
             renderPerformanceChart();
         }
+
+        function finalizeToday() {
+            if (state.pourList.length === 0) { showAlert('打設リストが空です。'); return; }
+            if (!confirm('本日の打設実績を確定します。鉄筋在庫が更新されます。打設リストはそのまま残ります。よろしいですか？')) return;
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            const totalWeight = state.pourList.reduce((s, p) => s + (p.weight * p.count), 0);
+            const totalCount = state.pourList.reduce((s, p) => s + p.count, 0);
+            // Remove existing today entry if already finalized
+            state.history = state.history.filter(h => h.date !== todayStr);
+            state.history.push({
+                date: todayStr,
+                weight: totalWeight,
+                count: totalCount,
+                details: state.pourList.map(p => ({ name: p.name, count: p.count, weight: p.weight, originalId: p.originalId, priority: p.priority || '中' }))
+            });
+            state.pourList.forEach(item => {
+                const target = state.candidates.find(c => Number(c.id) === Number(item.originalId));
+                if (target && target.trackingEnabled) target.stock -= (target.rebar * item.count);
+            });
+            saveState();
+            updateUI();
+            openHistory();
+            showAlert('本日の実績を確定しました。打設リストはそのまま残っています。');
+        }
+
+        function openHistoryEdit(idx) {
+            const h = state.history[idx];
+            if (!h) return;
+            const newWeight = prompt(`${h.date} の打設重量を編集してください（kg）:`, h.weight);
+            if (newWeight === null) return;
+            const parsed = parseInt(newWeight);
+            if (isNaN(parsed) || parsed < 0) { showAlert('正しい数値を入力してください。'); return; }
+            const newCount = prompt(`${h.date} の打設件数を編集してください（個）:`, h.count);
+            if (newCount === null) return;
+            const parsedCount = parseInt(newCount);
+            if (isNaN(parsedCount) || parsedCount < 0) { showAlert('正しい数値を入力してください。'); return; }
+            state.history[idx].weight = parsed;
+            state.history[idx].count = parsedCount;
+            saveState();
+            openHistory();
+            showAlert('実績を更新しました。');
+        }
+
+        function restoreFromHistory(idx) {
+            const h = state.history[idx];
+            if (!h || !h.details) return;
+            let addedCount = 0;
+            h.details.forEach(d => {
+                let candidate = null;
+                if (d.originalId) candidate = state.candidates.find(c => Number(c.id) === Number(d.originalId));
+                if (!candidate && d.name) candidate = state.candidates.find(c => c.name === d.name);
+                if (!candidate) return;
+                const alreadyIn = state.pourList.some(p => p.originalId === candidate.id);
+                if (!alreadyIn) {
+                    state.pourList.push({ ...candidate, id: Date.now() + Math.random(), originalId: candidate.id, count: d.count || 1 });
+                    addedCount++;
+                }
+            });
+            saveState();
+            updateUI();
+            elements.historyModal.classList.add('hidden');
+            showAlert(`${h.date} の製品 ${addedCount}件 を打設リストに追加しました。`);
+        }
+        window.finalizeToday = finalizeToday;
+        window.openHistoryEdit = openHistoryEdit;
+        window.restoreFromHistory = restoreFromHistory;
 
         // --- Calendar Forecast ---
         // --- Japanese Holidays ---
@@ -2220,8 +2985,10 @@
 
         function toggleCalendarSidebar() {
             const sidebar = document.getElementById('cal-sidebar');
+            const backdrop = document.getElementById('cal-sidebar-backdrop');
             if (sidebar) {
-                sidebar.classList.toggle('hidden-sidebar');
+                const isHidden = sidebar.classList.toggle('hidden-sidebar');
+                if (backdrop) backdrop.classList.toggle('visible', !isHidden);
             }
         }
 
@@ -2255,54 +3022,139 @@
             };
         }
 
+        function computeLastProductionDay(p) {
+            if (!p.trackingEnabled || p.rebar <= 0 || p.stock <= 0) return null;
+            const startDateStr = state.calendarStartDates[p.id];
+            if (!startDateStr) return null;
+
+            function isWeekendOrHoliday(d) {
+                const day = d.getDay();
+                if (day === 0 || day === 6) return true;
+                const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                return !!getHolidayName(ds);
+            }
+
+            let pos = new Date(
+                parseInt(startDateStr.split('-')[0]),
+                parseInt(startDateStr.split('-')[1]) - 1,
+                parseInt(startDateStr.split('-')[2])
+            );
+            while (isWeekendOrHoliday(pos)) pos.setDate(pos.getDate() + 1);
+
+            const dailyUsage = p.rebar * (p.count || 1);
+            let rebarLeft = p.stock;
+            let dayCount = 0;
+            const skips = (state.calendarProductSkips || {})[p.id] || [];
+            let lastDay = null;
+
+            while (rebarLeft >= dailyUsage && dayCount < 365) {
+                const ds = `${pos.getFullYear()}-${String(pos.getMonth()+1).padStart(2,'0')}-${String(pos.getDate()).padStart(2,'0')}`;
+                if (!skips.includes(ds)) {
+                    lastDay = ds;
+                    rebarLeft -= dailyUsage;
+                    dayCount++;
+                }
+                pos.setDate(pos.getDate() + 1);
+                while (isWeekendOrHoliday(pos)) pos.setDate(pos.getDate() + 1);
+            }
+            return lastDay;
+        }
+
         function renderCalendarProductPanel() {
             const panel = elements.calProductList;
             if (!panel) return;
             panel.innerHTML = '';
 
             const tracked = (state.candidates || []).filter(c => c.trackingEnabled && c.rebar > 0);
+
+            // Update count badge in header
+            const countBadge = document.getElementById('sidebar-product-count');
+            const addedCount = (state.calendarProducts || []).length;
+            if (countBadge) countBadge.textContent = `${addedCount}件表示中`;
+
             if (tracked.length === 0) {
-                panel.innerHTML = '<div style="color:var(--text-secondary);font-size:0.85rem;padding:8px;">鉄筋追跡が有効な製品がありません</div>';
+                panel.innerHTML = '<div style="margin:8px;padding:14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-size:0.82rem;color:#92400e;line-height:1.7;">追跡製品がありません<br><small>製品リスト → ⚙️鉄筋在庫設定タブ から在庫管理を有効にしてください</small></div>';
                 return;
             }
 
             tracked.forEach(p => {
                 const info = getCalendarProductInfo(p.id);
                 const isAdded = (state.calendarProducts || []).includes(p.id);
-                const item = document.createElement('div');
-                item.className = 'cal-product-item';
-                item.style.marginBottom = '8px';
-                item.style.padding = '8px';
-                item.style.background = 'white';
-                item.style.borderRadius = '6px';
-                item.style.border = '1px solid var(--border-color)';
-                item.style.display = 'flex';
-                item.style.justifyContent = 'space-between';
-                item.style.alignItems = 'center';
+                const lastDay = isAdded ? computeLastProductionDay(p) : null;
+                const dailyUsage = p.rebar * (p.count || 1);
+                const daysLeft = dailyUsage > 0 ? Math.floor(p.stock / dailyUsage) : '∞';
+                const stockLow = p.stock <= dailyUsage * 3;
 
-                item.innerHTML = `
-                    <div class="product-info" style="flex:1;">
-                        <span class="product-number" style="background:${info.color}; color:white; padding:2px 6px; border-radius:4px; margin-right:8px; font-weight:bold; font-size:0.8rem;">${info.number}</span>
-                        <span class="name" style="font-weight:600; font-size:0.85rem;">${p.name}</span>
-                        <div class="meta" style="font-size:0.75rem; color:var(--text-secondary); margin-left:26px;">
-                            追跡:有 | 在庫: ${p.stock}本
+                const card = document.createElement('div');
+                card.className = 'cal-product-card' + (isAdded ? ' active' : '');
+                card.innerHTML = `
+                    <div class="pc-header">
+                        <span class="pc-badge" style="background:${info.color};">${info.number}</span>
+                        <span class="pc-name" title="${p.name}">${p.name}</span>
+                        <button class="pc-edit-toggle-btn" onclick="toggleSidebarEdit(${p.id})" id="edit-toggle-btn-${p.id}">✏️ 在庫編集</button>
+                    </div>
+                    <div class="pc-meta">
+                        在庫: <strong style="color:${stockLow ? '#dc2626' : 'var(--text-primary)'};">${p.stock}本</strong>
+                        &nbsp;|&nbsp; 使用: ${dailyUsage}本/日
+                        &nbsp;|&nbsp; 残り約 <strong>${daysLeft}日</strong>
+                        ${isAdded && state.calendarStartDates[p.id] ? `<br>📅 開始日: <strong>${state.calendarStartDates[p.id]}</strong>` : ''}
+                    </div>
+                    <!-- Inline rebar edit -->
+                    <div class="pc-inline-edit hidden" id="pc-edit-${p.id}">
+                        <label>鉄筋在庫数を更新</label>
+                        <div class="pc-inline-edit-row">
+                            <input type="number" id="sidebar-rebar-${p.id}" value="${p.stock}" min="0" placeholder="在庫数">
+                            <span style="font-size:0.78rem; color:var(--text-secondary); white-space:nowrap;">本</span>
+                            <button class="pc-save-btn" onclick="quickUpdateRebarSidebar(${p.id})">保存</button>
                         </div>
                     </div>
-                    <button class="toggle-btn ${isAdded ? 'remove' : 'add'}" 
-                        style="padding: 4px 8px; font-size: 0.75rem; border-radius: 4px; border: 1px solid ${isAdded ? '#fee2e2' : '#dcfce7'}; 
-                               background: ${isAdded ? '#fef2f2' : '#f0fdf4'}; color: ${isAdded ? '#dc2626' : '#16a34a'}; cursor: pointer;">
-                        ${isAdded ? '✕ 削除' : '＋ 追加'}
-                    </button>
+                    ${lastDay ? `<div class="pc-lastday" style="margin-top:6px;">⚠ 在庫切れ予定: <strong>${lastDay}</strong></div>` : ''}
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="cal-action-btn ${isAdded ? 'remove-btn' : 'add-btn'}" style="flex:1; margin:0;">
+                            ${isAdded ? '✕ カレンダーから削除' : '＋ カレンダーに追加'}
+                        </button>
+                    </div>
                 `;
-
-                const btn = item.querySelector('.toggle-btn');
-                btn.onclick = () => {
-                    toggleCalendarProduct(p.id);
-                };
-
-                panel.appendChild(item);
+                card.querySelector('.cal-action-btn').onclick = () => toggleCalendarProduct(p.id);
+                panel.appendChild(card);
             });
         }
+
+        window.toggleSidebarEdit = (id) => {
+            const panel = document.getElementById(`pc-edit-${id}`);
+            const btn = document.getElementById(`edit-toggle-btn-${id}`);
+            if (panel) {
+                const isOpen = panel.classList.toggle('hidden');
+                // classList.toggle returns true if the class was added (hidden), false if removed (visible)
+                if (btn) btn.classList.toggle('active', !isOpen);
+                if (!isOpen) {
+                    const input = document.getElementById(`sidebar-rebar-${id}`);
+                    if (input) input.focus();
+                }
+            }
+        };
+
+        window.quickUpdateRebarSidebar = (id) => {
+            const input = document.getElementById(`sidebar-rebar-${id}`);
+            if (!input) return;
+            const newVal = parseInt(input.value) || 0;
+            const target = state.candidates.find(c => Number(c.id) === Number(id));
+            if (target) {
+                target.stock = newVal;
+                const mIdx = state.masterCandidates.findIndex(c => Number(c.id) === Number(id));
+                if (mIdx !== -1) {
+                    state.masterCandidates[mIdx].stock = newVal;
+                } else {
+                    state.masterCandidates.push(JSON.parse(JSON.stringify(target)));
+                }
+                saveState();
+                showAlert(`在庫を ${newVal}本 に更新しました。`);
+                renderCalendarProductPanel();
+                renderCalendar();
+                updateUI();
+                renderRebarInCandidateModal();
+            }
+        };
 
         function toggleCalendarProduct(productId) {
             if (!state.calendarProducts) state.calendarProducts = [];
@@ -2332,34 +3184,30 @@
                 if (!container) return;
                 container.innerHTML = '';
 
-                // Helper: format date as YYYY-MM-DD using LOCAL time (not UTC)
                 function formatLocalDate(d) {
                     const y = d.getFullYear();
                     const m = String(d.getMonth() + 1).padStart(2, '0');
                     const dd = String(d.getDate()).padStart(2, '0');
                     return `${y}-${m}-${dd}`;
                 }
-
-                function isWeekendDay(d) {
-                    return d.getDay() === 0 || d.getDay() === 6;
-                }
-
+                function isWeekendDay(d) { return d.getDay() === 0 || d.getDay() === 6; }
                 function isHolidayOrWeekend(d) {
                     if (isWeekendDay(d)) return true;
                     return !!getHolidayName(formatLocalDate(d));
                 }
-
                 function skipToWorkday(d) {
-                    while (isHolidayOrWeekend(d)) {
-                        d.setDate(d.getDate() + 1);
-                    }
+                    while (isHolidayOrWeekend(d)) d.setDate(d.getDate() + 1);
                     return d;
                 }
+                function parseLocalDate(str) {
+                    const parts = str.split('-');
+                    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                }
 
-                const startDate = new Date();
-                startDate.setDate(1);
+                const today = new Date();
+                const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
 
-                // Loop for 12 months
+                // Render 12 months of calendar cells
                 for (let mOffset = 0; mOffset < 12; mOffset++) {
                     const year = startDate.getFullYear();
                     const month = startDate.getMonth();
@@ -2374,16 +3222,12 @@
 
                     const grid = document.createElement('div');
                     grid.className = 'calendar-grid';
-                    grid.style.background = 'white';
-                    grid.style.borderRadius = '12px';
-                    grid.style.padding = '8px';
-                    grid.style.border = '1px solid var(--border-color)';
+                    grid.style.cssText = 'background:white;border-radius:12px;padding:8px;border:1px solid var(--border-color);margin-bottom:24px;';
 
-                    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-                    dayNames.forEach(d => {
+                    ['日', '月', '火', '水', '木', '金', '土'].forEach(dn => {
                         const h = document.createElement('div');
                         h.className = 'calendar-header-day';
-                        h.textContent = d;
+                        h.textContent = dn;
                         grid.appendChild(h);
                     });
 
@@ -2399,159 +3243,156 @@
                         const isWeekend = isWeekendDay(date);
                         const dateStr = formatLocalDate(date);
                         const holidayName = getHolidayName(dateStr);
+                        const isToday = dateStr === formatLocalDate(today);
+
                         const cell = document.createElement('div');
                         cell.className = `calendar-day${isWeekend ? ' weekend' : ''}${holidayName ? ' holiday' : ''}`;
-                        cell.style.color = isWeekend || holidayName ? '#e11d48' : 'var(--text-primary)';
-                        cell.innerHTML = `<span class="day-num">${d}</span>${holidayName ? `<div class="holiday-name" style="color:#ef4444; font-size:0.6rem;">${holidayName}</div>` : ''}`;
+                        if (isToday) {
+                            cell.style.outline = '2px solid #2563eb';
+                            cell.style.outlineOffset = '-2px';
+                        }
+                        cell.innerHTML = `<span class="day-num" style="color:${isWeekend || holidayName ? '#e11d48' : 'var(--text-secondary)'};">${d}</span>${holidayName ? `<div class="holiday-name">${holidayName}</div>` : ''}`;
                         cell.dataset.date = dateStr;
-
-                        // Click cell to set start date for all calendar products
-                        cell.onclick = (e) => {
-                            if (e.target.closest('.calendar-bar')) return;
-                            let selDate = new Date(year, month, d);
-                            skipToWorkday(selDate);
-                            const targetDateStr = formatLocalDate(selDate);
-                            // All selected products start on this date
-                            if (state.calendarProducts) {
-                                state.calendarProducts.forEach(pid => {
-                                    state.calendarStartDates[pid] = targetDateStr;
-                                });
-                                saveState();
-                                renderCalendar();
-                            }
-                        };
-
                         grid.appendChild(cell);
                     }
+
                     monthWrapper.appendChild(grid);
                     container.appendChild(monthWrapper);
-
                     startDate.setMonth(startDate.getMonth() + 1);
                 }
 
-                // ONLY display products from calendarProducts
-                const forecastItems = [];
-                (state.calendarProducts || []).forEach(pid => {
-                    const target = state.candidates.find(c => c.id === pid);
-                    if (!target || !target.trackingEnabled) return;
-                    forecastItems.push({
-                        id: target.id,
-                        name: target.name,
-                        rebar: target.rebar,
-                        stock: target.stock,
-                        count: target.count || 1
-                    });
-                });
+                // --- Forecast bars ---
+                const forecastItems = (state.calendarProducts || [])
+                    .map(pid => state.candidates.find(c => c.id === pid))
+                    .filter(p => p && p.trackingEnabled && p.rebar > 0);
 
-                // Forecast Logic
                 forecastItems.forEach(p => {
                     const info = getCalendarProductInfo(p.id);
-                    const startDateStr = state.calendarStartDates[p.id] || formatLocalDate(new Date());
-                    let currentPos = new Date(
-                        parseInt(startDateStr.split('-')[0]),
-                        parseInt(startDateStr.split('-')[1]) - 1,
-                        parseInt(startDateStr.split('-')[2])
-                    );
+                    const startDateStr = state.calendarStartDates[p.id] || formatLocalDate(today);
 
-                    // Skip to first workday (not weekend, not holiday)
-                    skipToWorkday(currentPos);
+                    let pos = parseLocalDate(startDateStr);
+                    skipToWorkday(pos);
 
-                    const dailyUsage = p.rebar * p.count;
+                    const dailyUsage = p.rebar * (p.count || 1);
                     if (dailyUsage <= 0) return;
 
+                    const skips = (state.calendarProductSkips || {})[p.id] || [];
+
+                    // Pre-compute all production dates to know which is first/last
+                    const productionDates = [];
                     let rebarLeft = p.stock;
                     let dayCount = 0;
-                    const skips = state.calendarProductSkips[p.id] || [];
+                    let scanPos = new Date(pos);
 
                     while (rebarLeft >= dailyUsage && dayCount < 365) {
-                        const cellDateStr = formatLocalDate(currentPos);
-
-                        // Check if this product is manually skipped on this date
-                        if (skips.includes(cellDateStr)) {
-                            currentPos.setDate(currentPos.getDate() + 1);
-                            skipToWorkday(currentPos);
-                            continue; // Shift to next day without deducting stock
+                        const ds = formatLocalDate(scanPos);
+                        if (!skips.includes(ds)) {
+                            productionDates.push(ds);
+                            rebarLeft -= dailyUsage;
+                            dayCount++;
                         }
+                        scanPos.setDate(scanPos.getDate() + 1);
+                        skipToWorkday(scanPos);
+                    }
 
+                    if (productionDates.length === 0) return;
+
+                    // Short display name: last space-separated token
+                    const nameParts = p.name.trim().split(/\s+/);
+                    const shortName = nameParts[nameParts.length - 1] || p.name;
+                    const displayShort = shortName.length > 8 ? shortName.substring(0, 7) + '…' : shortName;
+
+                    productionDates.forEach((cellDateStr, idx) => {
                         const cell = container.querySelector(`.calendar-day[data-date="${cellDateStr}"]`);
-                        if (cell) {
-                            const bar = document.createElement('div');
-                            bar.className = 'calendar-bar';
+                        if (!cell) return;
+
+                        const isFirst = idx === 0;
+                        const isLast = idx === productionDates.length - 1;
+
+                        const bar = document.createElement('div');
+                        let classStr = 'calendar-bar';
+                        if (isFirst) classStr += ' start-day';
+                        if (isLast) classStr += ' end-day';
+                        bar.className = classStr;
+
+                        if (isLast) {
+                            bar.style.backgroundColor = '#ef4444';
+                            bar.title = `[在庫切れ] ${p.name}\n在庫: ${p.stock}本 / 使用: ${dailyUsage}本/日\n最終日: ${cellDateStr}`;
+                            bar.innerHTML = `<span style="font-size:0.6rem;font-weight:900;">⚠${info.number}</span>`;
+                        } else {
                             bar.style.backgroundColor = info.color;
-                            bar.textContent = info.number;
-                            bar.dataset.productId = p.id;
-                            bar.dataset.date = cellDateStr;
-                            bar.title = `${p.name} (クリックでこの日をスキップ)`;
-
-                            // Click to toggle skip
-                            bar.onclick = (e) => {
-                                e.stopPropagation();
-                                toggleProductSkip(p.id, cellDateStr);
-                            };
-
-                            // Drag support
-                            bar.onpointerdown = (e) => {
-                                // Only drag if it's the start date (or allow dragging any to set new start)
-                                // But simple click to toggle skip is priority.
-                                // If they move the pointer, toggle drag.
-                                const dragItem = e.currentTarget; // use currentTarget
-                                let moved = false;
-                                const startX = e.clientX;
-                                const startY = e.clientY;
-
-                                const moveHandler = (me) => {
-                                    if (Math.abs(me.clientX - startX) > 5 || Math.abs(me.clientY - startY) > 5) {
-                                        moved = true;
-                                        dragItem.classList.add('dragging');
-                                        dragItem.setPointerCapture(e.pointerId);
-
-                                        // Visual feedback for drop target
-                                        document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('drop-target'));
-                                        const targetCell = document.elementFromPoint(me.clientX, me.clientY)?.closest('.calendar-day');
-                                        if (targetCell) targetCell.classList.add('drop-target');
-                                    }
-                                };
-
-                                const upHandler = (ue) => {
-                                    window.removeEventListener('pointermove', moveHandler);
-                                    window.removeEventListener('pointerup', upHandler);
-
-                                    if (moved) {
-                                        dragItem.classList.remove('dragging');
-                                        dragItem.releasePointerCapture(ue.pointerId);
-                                        const targetCell = document.elementFromPoint(ue.clientX, ue.clientY)?.closest('.calendar-day');
-                                        if (targetCell && targetCell.dataset.date) {
-                                            state.calendarStartDates[p.id] = targetCell.dataset.date;
-                                            // Reset skips when moving start date? Maybe not, but usually logical.
-                                            saveState();
-                                            renderCalendar();
-                                        }
-                                        document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('drop-target'));
-                                    }
-                                };
-
-                                window.addEventListener('pointermove', moveHandler);
-                                window.addEventListener('pointerup', upHandler);
-                            };
-
-                            cell.appendChild(bar);
+                            const rem = p.stock - dailyUsage * (idx + 1);
+                            bar.title = `${p.name}\n使用後残数: ${rem}本 / 使用: ${dailyUsage}本/日\nドラッグで移動 / クリックでスキップ`;
+                            if (isFirst) {
+                                bar.innerHTML = `<span style="font-size:0.58rem;font-weight:900;">${info.number} ${displayShort}</span>`;
+                            } else {
+                                bar.innerHTML = `<span style="font-size:0.65rem;font-weight:900;">${info.number}</span>`;
+                            }
                         }
-                        currentPos.setDate(currentPos.getDate() + 1);
-                        skipToWorkday(currentPos);
-                        rebarLeft -= dailyUsage;
-                        dayCount++;
-                    }
 
-                    // Last day alert
-                    const lastCellDateStr = formatLocalDate(currentPos);
-                    const lastCell = container.querySelector(`.calendar-day[data-date="${lastCellDateStr}"]`);
-                    if (lastCell) {
-                        const alert = document.createElement('div');
-                        alert.className = 'calendar-bar last-day';
-                        alert.style.backgroundColor = '#ef4444';
-                        alert.textContent = `!${info.number}`;
-                        lastCell.appendChild(alert);
-                    }
+                        bar.dataset.productId = String(p.id);
+                        bar.dataset.date = cellDateStr;
+
+                        // Click = toggle skip (only if not a drag)
+                        // Drag = move start date
+                        let pointerMoved = false;
+                        let dropTarget = null;
+
+                        bar.onpointerdown = (e) => {
+                            e.stopPropagation();
+                            pointerMoved = false;
+                            dropTarget = null;
+                            const startX = e.clientX;
+                            const startY = e.clientY;
+                            const capturedProductId = p.id;
+
+                            bar.setPointerCapture(e.pointerId);
+
+                            const onMove = (me) => {
+                                if (!pointerMoved && (Math.abs(me.clientX - startX) > 6 || Math.abs(me.clientY - startY) > 6)) {
+                                    pointerMoved = true;
+                                    bar.classList.add('dragging');
+                                }
+                                if (pointerMoved) {
+                                    document.querySelectorAll('.calendar-day.drop-target').forEach(d => d.classList.remove('drop-target'));
+                                    bar.style.pointerEvents = 'none';
+                                    const el = document.elementFromPoint(me.clientX, me.clientY);
+                                    bar.style.pointerEvents = '';
+                                    dropTarget = el ? el.closest('.calendar-day') : null;
+                                    if (dropTarget) dropTarget.classList.add('drop-target');
+                                }
+                            };
+
+                            const onUp = (ue) => {
+                                bar.removeEventListener('pointermove', onMove);
+                                bar.removeEventListener('pointerup', onUp);
+                                bar.classList.remove('dragging');
+                                document.querySelectorAll('.calendar-day.drop-target').forEach(d => d.classList.remove('drop-target'));
+
+                                if (pointerMoved) {
+                                    if (dropTarget && dropTarget.dataset.date) {
+                                        let targetDate = parseLocalDate(dropTarget.dataset.date);
+                                        skipToWorkday(targetDate);
+                                        state.calendarStartDates[capturedProductId] = formatLocalDate(targetDate);
+                                        if (state.calendarProductSkips && state.calendarProductSkips[capturedProductId]) {
+                                            state.calendarProductSkips[capturedProductId] = [];
+                                        }
+                                        saveState();
+                                        renderCalendar();
+                                        renderCalendarProductPanel();
+                                    }
+                                } else {
+                                    // Click = toggle skip
+                                    toggleProductSkip(capturedProductId, cellDateStr);
+                                }
+                            };
+
+                            bar.addEventListener('pointermove', onMove);
+                            bar.addEventListener('pointerup', onUp);
+                        };
+
+                        cell.appendChild(bar);
+                    });
                 });
             } catch (err) {
                 console.error("renderCalendar error:", err);
@@ -2651,14 +3492,101 @@
             }
         }
 
+        let _qtyPickerProductId = null;
+        let _qtyPickerQty = 1;
+        let _undoToastTimer = null;
+        let _lastAddedPourId = null;
+
         function moveToPour(productId) {
-            const p = state.candidates.find(p => p.id === productId);
+            // Open quantity picker bottom sheet
+            const p = state.candidates.find(c => c.id === productId);
             if (!p) return;
-            if (p.rebar > p.stock) { showAlert(`「${p.name}」の鉄筋在庫が不足しています！`); return; }
-            state.pourList.push({ ...p, id: Date.now() + Math.random(), originalId: p.id, count: 1 });
+            if (p.trackingEnabled && p.rebar > p.stock) {
+                showAlert(`「${p.name}」の鉄筋在庫が不足しています！`); return;
+            }
+            _qtyPickerProductId = productId;
+            _qtyPickerQty = 1;
+            document.getElementById('qty-sheet-name').textContent = p.name;
+            document.getElementById('qty-sheet-weight').textContent = `${p.weight.toLocaleString()} kg × 1 = ${p.weight.toLocaleString()} kg`;
+            document.getElementById('qty-sheet-num').textContent = '1';
+            document.getElementById('qty-picker-backdrop').classList.add('visible');
+            document.getElementById('qty-picker-sheet').classList.add('open');
+        }
+
+        function adjustQty(delta) {
+            const p = state.candidates.find(c => c.id === _qtyPickerProductId);
+            if (!p) return;
+            _qtyPickerQty = Math.max(1, _qtyPickerQty + delta);
+            document.getElementById('qty-sheet-num').textContent = _qtyPickerQty;
+            const total = p.weight * _qtyPickerQty;
+            document.getElementById('qty-sheet-weight').textContent = `${p.weight.toLocaleString()} kg × ${_qtyPickerQty} = ${total.toLocaleString()} kg`;
+        }
+
+        function closeQtyPicker() {
+            document.getElementById('qty-picker-backdrop').classList.remove('visible');
+            document.getElementById('qty-picker-sheet').classList.remove('open');
+            _qtyPickerProductId = null;
+        }
+
+        function confirmQtyAdd() {
+            if (!_qtyPickerProductId) return;
+            const p = state.candidates.find(c => c.id === _qtyPickerProductId);
+            if (!p) return;
+            const newItem = { ...p, id: Date.now() + Math.random(), originalId: p.id, count: _qtyPickerQty };
+            state.pourList.push(newItem);
+            _lastAddedPourId = newItem.id;
             saveState();
             updateUI();
+            closeQtyPicker();
+            showUndoToast(p.name, _qtyPickerQty);
         }
+
+        function showUndoToast(productName, qty) {
+            const toast = document.getElementById('undo-toast');
+            const msg = document.getElementById('undo-toast-msg');
+            const progress = document.getElementById('undo-toast-progress');
+            if (!toast) return;
+            const qtyText = qty > 1 ? ` ×${qty}` : '';
+            msg.textContent = `「${productName}${qtyText}」を追加しました`;
+            toast.classList.add('visible');
+            if (_undoToastTimer) clearTimeout(_undoToastTimer);
+            // Animate progress bar
+            progress.style.transition = 'none';
+            progress.style.width = '100%';
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    progress.style.transition = 'width 4s linear';
+                    progress.style.width = '0%';
+                });
+            });
+            _undoToastTimer = setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 4000);
+        }
+
+        function undoLastAdd() {
+            if (_lastAddedPourId == null) return;
+            const idx = state.pourList.findIndex(p => p.id === _lastAddedPourId);
+            if (idx !== -1) {
+                state.pourList.splice(idx, 1);
+                saveState();
+                updateUI();
+            }
+            _lastAddedPourId = null;
+            const toast = document.getElementById('undo-toast');
+            if (toast) toast.classList.remove('visible');
+            if (_undoToastTimer) clearTimeout(_undoToastTimer);
+        }
+
+        function setPourSort(mode) {
+            state.pourSortMode = mode;
+            updateUI();
+        }
+        window.setPourSort = setPourSort;
+        window.adjustQty = adjustQty;
+        window.closeQtyPicker = closeQtyPicker;
+        window.confirmQtyAdd = confirmQtyAdd;
+        window.undoLastAdd = undoLastAdd;
 
         function moveToCandidate(uniqueId) {
             const index = state.pourList.findIndex(p => p.id === uniqueId);
@@ -2668,12 +3596,18 @@
             updateUI();
         }
 
+        function isChisakiBKC(name) {
+            return name && name.includes('地先境界BKC');
+        }
+
         function updateQuantity(productId, delta) {
             const p = state.pourList.find(item => item.id === productId);
             if (!p) return;
             const next = p.count + delta;
-            if (next < 1) return;
-            if (delta > 0 && (next * p.rebar) > p.stock) { showAlert(`「${p.name}」の鉄筋在庫が不足しています！`); return; }
+            // 地先境界BKCかつ生産終了チェック済みの場合のみ0を許容
+            const minCount = (isChisakiBKC(p.name) && p.productionDone) ? 0 : 1;
+            if (next < minCount) return;
+            if (delta > 0 && p.rebar > 0 && (next * p.rebar) > p.stock) { showAlert(`「${p.name}」の鉄筋在庫が不足しています！`); return; }
             p.count = next;
             saveState();
             updateUI();
@@ -2726,7 +3660,13 @@
                         date: state.lastProcessedDate,
                         weight: totalWeight,
                         count: totalCount,
-                        details: state.pourList.map(p => ({ name: p.name, count: p.count }))
+                        details: state.pourList.map(p => ({
+                            name: p.name,
+                            count: p.count,
+                            weight: p.weight,
+                            originalId: p.originalId,
+                            priority: p.priority || '中'
+                        }))
                     });
 
                     // Update stocks
@@ -2737,10 +3677,7 @@
                         }
                     });
 
-                    // Clear pourList for new day
-                    state.pourList = [];
-
-                    showAlert(`日付が変わりました（${todayStr}）。\n実績を記録し、鉄筋在庫を更新しました。`);
+                    showAlert(`日付が変わりました（${todayStr}）。\n実績を記録し、鉄筋在庫を更新しました。\n打設リストはそのまま残っています。`);
                 } catch (e) {
                     console.error("Daily process error:", e);
                 }
@@ -2809,12 +3746,24 @@
 
                 renderList('candidate', filteredCandidates);
 
-                // Sort pourList based on the order in the master candidate list
-                const sortedPourList = [...state.pourList].sort((a, b) => {
-                    const indexA = state.candidates.findIndex(c => Number(c.id) === Number(a.originalId));
-                    const indexB = state.candidates.findIndex(c => Number(c.id) === Number(b.originalId));
-                    return (indexA === -1 ? 9999 : indexA) - (indexB === -1 ? 9999 : indexB);
-                });
+                // Sort pourList
+                let sortedPourList = [...state.pourList];
+                const pourSortMode = state.pourSortMode || 'list';
+                if (pourSortMode === 'priority') {
+                    const pRank = { '高': 3, '中': 2, '低': 1 };
+                    sortedPourList.sort((a, b) => (pRank[b.priority] || 0) - (pRank[a.priority] || 0));
+                } else if (pourSortMode === 'weight') {
+                    sortedPourList.sort((a, b) => (b.weight * b.count) - (a.weight * a.count));
+                } else if (pourSortMode === 'added') {
+                    // Keep insertion order (no sort)
+                } else {
+                    // 'list' (standard): sort by master candidate order
+                    sortedPourList.sort((a, b) => {
+                        const indexA = state.candidates.findIndex(c => Number(c.id) === Number(a.originalId));
+                        const indexB = state.candidates.findIndex(c => Number(c.id) === Number(b.originalId));
+                        return (indexA === -1 ? 9999 : indexA) - (indexB === -1 ? 9999 : indexB);
+                    });
+                }
 
                 renderList('pour', sortedPourList);
                 const total = state.pourList.reduce((sum, p) => sum + (p.weight * p.count), 0);
@@ -2839,6 +3788,42 @@
                 const per = Math.min((total / state.quota) * 100, 100);
                 elements.quotaGauge.style.width = `${per}%`;
                 elements.quotaGauge.className = 'gauge-fill' + (total >= state.quota ? ' goal-reached' : '');
+
+                // Remaining weight display
+                const remaining = Math.max(state.quota - total, 0);
+                const remDisplay = document.getElementById('remaining-display');
+                const remKg = document.getElementById('remaining-kg');
+                const remText = document.getElementById('remaining-text');
+                if (remDisplay && remText) {
+                    if (total >= state.quota) {
+                        remDisplay.className = 'remaining-display achieved';
+                        remText.innerHTML = '🎉 本日の目標達成！';
+                    } else {
+                        remDisplay.className = 'remaining-display';
+                        remText.innerHTML = `目標まであと <span class="remaining-val">${remaining.toLocaleString()}</span> kg`;
+                    }
+                }
+
+                // Weight preview in candidate modal
+                const modalTotal = document.getElementById('modal-total-weight');
+                const modalGoal = document.getElementById('modal-goal-weight');
+                const modalRem = document.getElementById('modal-remaining-kg');
+                const modalRemText = document.getElementById('modal-remaining-text');
+                if (modalTotal) modalTotal.textContent = total.toLocaleString();
+                if (modalGoal) modalGoal.textContent = state.quota.toLocaleString();
+                if (modalRem) modalRem.textContent = remaining.toLocaleString();
+                if (modalRemText) {
+                    modalRemText.className = 'wp-remaining' + (total >= state.quota ? ' goal-reached' : '');
+                    if (total >= state.quota) {
+                        modalRemText.innerHTML = '🎉 目標達成！';
+                    } else {
+                        modalRemText.innerHTML = `残り <strong>${remaining.toLocaleString()}</strong> kg`;
+                    }
+                }
+
+                // Update pour sort select
+                const pourSortSel = document.getElementById('pour-sort-select');
+                if (pourSortSel && state.pourSortMode) pourSortSel.value = state.pourSortMode;
             } catch (e) {
                 console.error("updateUI crashed:", e);
             }
@@ -2847,7 +3832,7 @@
         function renderList(type, list) {
             const container = (type === 'candidate') ? elements.candidateList : elements.pourList;
             if (list.length === 0) {
-                container.innerHTML = `<div class="empty-state">${type === 'candidate' ? '製品データを取り込んでください' : '候補リストから追加してください'}</div>`;
+                container.innerHTML = `<div class="empty-state">${type === 'candidate' ? '製品データがありません' : '＋製品追加ボタンから追加してください'}</div>`;
                 return;
             }
             container.innerHTML = '';
@@ -2856,7 +3841,8 @@
                 const pri = p.priority || '中';
                 const pClass = `priority-${pri === '高' ? 'high' : pri === '中' ? 'medium' : 'low'}`;
 
-                card.className = `product-card`;
+                const priColorClass = (p.priority === '高') ? 'pri-high' : (p.priority === '低') ? 'pri-low' : 'pri-medium';
+                card.className = `product-card ${priColorClass}`;
                 let stockVal = p.stock;
                 let isTracked = p.trackingEnabled;
 
@@ -2877,8 +3863,8 @@
                     if (isAdded) card.classList.add('added');
 
                     card.onclick = (e) => {
-                        // Prevent triggering card click if an action button was clicked
                         if (e.target.closest('.action-icon') || e.target.closest('button')) return;
+                        if (isAdded) return; // 追加済みの場合はカードタップを無効化
                         moveToPour(p.id);
                     };
                     const feedback = isAdded ? '<span class="added-badge">✅ 追加済み</span>' : '';
@@ -2891,7 +3877,7 @@
                                 ${p.name} ${feedback}
                             </div>
                             <div class="card-meta">
-                                ${p.trackingEnabled ? `<span class="stock-tag">鉄筋在庫: ${p.stock}本</span>` : ''}
+                                ${p.trackingEnabled ? (p.stock <= 0 ? `<span class="stock-tag danger">在庫切れ</span>` : p.stock <= p.rebar * 3 ? `<span class="stock-tag low">鉄筋在庫: ${p.stock}本</span>` : `<span class="stock-tag">鉄筋在庫: ${p.stock}本</span>`) : ''}
                                 ${lowStockAlert}
                             </div>
                             <div class="card-actions">
@@ -2899,8 +3885,9 @@
                                     <button class="action-icon" style="background:#fef3c7; border:1px solid #fcd34d;" onclick="event.stopPropagation(); moveCandidate(${p.id}, -1)">🔼</button>
                                     <button class="action-icon" style="background:#fef3c7; border:1px solid #fcd34d;" onclick="event.stopPropagation(); moveCandidate(${p.id}, 1)">🔽</button>
                                 ` : ''}
+                                ${isAdded ? `<button class="action-icon cancel-add" onclick="event.stopPropagation(); removePourByOriginalId(${p.id})">✕ 追加取り消し</button>` : ''}
                                 <button class="action-icon" onclick="event.stopPropagation(); openEditModal(${p.id})">編集</button>
-                                <button class="action-icon delete" onclick="event.stopPropagation(); deleteProduct(${p.id})">削除</button>
+                                ${!isAdded ? `<button class="action-icon delete" onclick="event.stopPropagation(); deleteProduct(${p.id})">削除</button>` : ''}
                             </div>
                         </div>
                         <div class="card-side"><div class="product-weight">${p.weight.toLocaleString()}kg</div></div>
@@ -2916,11 +3903,16 @@
                     const done = p.poured >= p.quantity;
                     const stockText = p.trackingEnabled ? (done ? '<span class="added-badge">完了</span>' : `<span class="stock-tag ${sClass}">鉄筋残数: ${rem}本</span>`) : '';
 
+                    if (p.productionDone) card.classList.add('production-done');
+                    card.onclick = (e) => {
+                        if (e.target.closest('button') || e.target.closest('.quantity-controls')) return;
+                        openCardDetail(p.id);
+                    };
                     card.innerHTML = `
                         <div class="card-main">
-                            <div class="product-name" style="color: ${done ? '#94a3b8' : 'var(--text-primary)'};">
+                            <div class="product-name" style="color: var(--text-primary);">
                                 <span class="priority-tag ${pClass}">${pri}</span>
-                                ${p.name}
+                                ${p.name}${p.productionDone ? ' <span style="font-size:0.7rem;color:#94a3b8;font-weight:700;">生産終了</span>' : ''}
                             </div>
                             <div class="card-meta">
                                 ${stockText}
@@ -2928,7 +3920,7 @@
                             </div>
                         </div>
                         <div class="card-side">
-                            <div class="product-weight">${(p.weight * p.count).toLocaleString()}kg</div>
+                            <div class="product-weight" style="${p.count === 0 ? 'color:#94a3b8;' : ''}">${p.count === 0 ? '−' : (p.weight * p.count).toLocaleString() + 'kg'}</div>
                             <div class="quantity-controls">
                                 <button class="qty-btn" onclick="updateQuantity(${p.id}, -1)">-</button>
                                 <span class="qty-val">✖️${p.count}</span>
@@ -2937,6 +3929,40 @@
                             <button class="btn-return" onclick="moveToCandidate(${p.id})">候補に戻す</button>
                         </div>
                     `;
+                }
+                // Swipe-to-delete for pour cards (no wrapper — touch events on card directly)
+                if (type === 'pour') {
+                    card.classList.add('pour-swipeable');
+                    let startX = 0, currentX = 0, swiping = false;
+                    const capturedId = p.id;
+                    const origBg = '';
+                    card.addEventListener('touchstart', (e) => {
+                        startX = e.touches[0].clientX;
+                        swiping = true;
+                        card.style.transition = 'none';
+                    }, { passive: true });
+                    card.addEventListener('touchmove', (e) => {
+                        if (!swiping) return;
+                        currentX = Math.min(0, e.touches[0].clientX - startX);
+                        card.style.transform = `translateX(${currentX}px)`;
+                        const ratio = Math.min(Math.abs(currentX) / 100, 1);
+                        card.style.background = `rgba(220,38,38,${(ratio * 0.18).toFixed(2)})`;
+                        card.style.borderLeftColor = `rgba(220,38,38,${ratio.toFixed(2)})`;
+                    }, { passive: true });
+                    card.addEventListener('touchend', () => {
+                        swiping = false;
+                        card.style.transition = 'transform 0.2s ease-out, background 0.2s, border-left-color 0.2s';
+                        if (Math.abs(currentX) > 80) {
+                            card.style.background = 'rgba(220,38,38,0.25)';
+                            card.style.transform = 'translateX(-110%)';
+                            setTimeout(() => moveToCandidate(capturedId), 220);
+                        } else {
+                            card.style.transform = 'translateX(0)';
+                            card.style.background = '';
+                            card.style.borderLeftColor = '';
+                        }
+                        currentX = 0;
+                    });
                 }
                 container.appendChild(card);
             });
@@ -2958,6 +3984,187 @@
             updateUI();
         }
 
+
+        // --- Card Detail Sheet ---
+        let _cdsId = null;
+
+        function openCardDetail(pourId) {
+            const p = state.pourList.find(item => item.id === pourId);
+            if (!p) return;
+            _cdsId = pourId;
+            const candidate = state.candidates.find(c => Number(c.id) === Number(p.originalId));
+
+            document.getElementById('cds-name').textContent = p.name;
+
+            // 生産終了チェック
+            document.getElementById('cds-done-check').checked = !!p.productionDone;
+
+            // 鉄筋残数（trackingEnabled の製品のみ表示）
+            const rebarRow = document.getElementById('cds-rebar-row');
+            if (candidate && candidate.trackingEnabled) {
+                rebarRow.style.display = '';
+                document.getElementById('cds-rebar-input').value = candidate.stock ?? 0;
+            } else {
+                rebarRow.style.display = 'none';
+            }
+
+            // 製造数（地先製品のみ表示）
+            const qtyRow = document.getElementById('cds-qty-row');
+            if (p.name.includes('地先')) {
+                qtyRow.style.display = '';
+                document.getElementById('cds-qty-input').value = p.count;
+            } else {
+                qtyRow.style.display = 'none';
+            }
+
+            document.getElementById('cds-backdrop').classList.add('visible');
+            document.getElementById('cds-sheet').classList.add('open');
+        }
+
+        function closeCardDetail() {
+            document.getElementById('cds-backdrop').classList.remove('visible');
+            document.getElementById('cds-sheet').classList.remove('open');
+            _cdsId = null;
+        }
+
+        function toggleCardDone() {
+            if (!_cdsId) return;
+            const p = state.pourList.find(item => item.id === _cdsId);
+            if (!p) return;
+            p.productionDone = document.getElementById('cds-done-check').checked;
+            // 地先境界BKCは生産終了チェックで製造数を自動で0に
+            if (isChisakiBKC(p.name) && p.productionDone) {
+                p.count = 0;
+            }
+            // 生産終了を解除したときcount=0なら1に戻す
+            if (!p.productionDone && p.count === 0) {
+                p.count = 1;
+            }
+            saveState();
+            updateUI();
+        }
+
+        function saveCardRebar() {
+            if (!_cdsId) return;
+            const p = state.pourList.find(item => item.id === _cdsId);
+            if (!p) return;
+            const candidate = state.candidates.find(c => Number(c.id) === Number(p.originalId));
+            if (!candidate) return;
+            const val = parseInt(document.getElementById('cds-rebar-input').value);
+            if (isNaN(val) || val < 0) { showAlert('正しい数値を入力してください。'); return; }
+            candidate.stock = val;
+            saveState();
+            updateUI();
+            showAlert('鉄筋残数を更新しました。');
+        }
+
+        function saveCardQty() {
+            if (!_cdsId) return;
+            const p = state.pourList.find(item => item.id === _cdsId);
+            if (!p) return;
+            const val = parseInt(document.getElementById('cds-qty-input').value);
+            const allowZero = isChisakiBKC(p.name) && p.productionDone;
+            const minVal = allowZero ? 0 : 1;
+            if (isNaN(val) || val < minVal) {
+                showAlert(allowZero ? '0以上の数値を入力してください。' : '1以上の数値を入力してください。');
+                return;
+            }
+            p.count = val;
+            saveState();
+            updateUI();
+        }
+        window.openCardDetail = openCardDetail;
+        window.closeCardDetail = closeCardDetail;
+        window.toggleCardDone = toggleCardDone;
+        window.saveCardRebar = saveCardRebar;
+        window.saveCardQty = saveCardQty;
+
+        function savePourPreset() {
+            if (state.pourList.length === 0) { showAlert('打設リストが空です。'); return; }
+            state.pourListPreset = state.pourList.map(p => ({ originalId: p.originalId, count: p.count }));
+            saveState();
+            showAlert(`打設リスト ${state.pourListPreset.length}件 をプリセットに保存しました。`);
+        }
+
+        function loadPourPreset() {
+            if (!state.pourListPreset || state.pourListPreset.length === 0) {
+                showAlert('保存されたプリセットがありません。\n先に「プリセット保存」を押してください。');
+                return;
+            }
+            if (!confirm(`プリセット ${state.pourListPreset.length}件 を打設リストに追加しますか？\n（既にリストにある製品はスキップされます）`)) return;
+            let added = 0;
+            state.pourListPreset.forEach(preset => {
+                const already = state.pourList.some(p => Number(p.originalId) === Number(preset.originalId));
+                if (already) return;
+                const candidate = state.candidates.find(c => Number(c.id) === Number(preset.originalId));
+                if (!candidate) return;
+                state.pourList.push({
+                    id: Date.now() + Math.random(),
+                    originalId: candidate.id,
+                    name: candidate.name,
+                    weight: candidate.weight,
+                    rebar: candidate.rebar || 0,
+                    stock: candidate.stock || 0,
+                    trackingEnabled: candidate.trackingEnabled || false,
+                    priority: candidate.priority || '中',
+                    count: preset.count || 1,
+                    poured: 0
+                });
+                added++;
+            });
+            saveState();
+            updateUI();
+            showAlert(`${added}件 をリストに追加しました。`);
+        }
+        window.savePourPreset = savePourPreset;
+        window.loadPourPreset = loadPourPreset;
+
+        function importProductCSV(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const lines = text.split(/\r?\n/).filter(l => l.trim());
+                if (lines.length < 2) { showAlert('CSVが空か形式が正しくありません。'); return; }
+                // Detect header: skip if first row looks like header (non-numeric weight)
+                const startIdx = isNaN(parseInt(lines[0].split(',')[1])) ? 1 : 0;
+                let added = 0, skipped = 0;
+                for (let i = startIdx; i < lines.length; i++) {
+                    // Support comma and tab delimited, handle quoted fields
+                    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                    const name = cols[0];
+                    const weight = parseInt(cols[1]);
+                    const priority = ['高','中','低'].includes(cols[2]) ? cols[2] : '中';
+                    const rebar = parseInt(cols[3]) || 0;
+                    const stock = parseInt(cols[4]) || 50;
+                    if (!name || isNaN(weight) || weight <= 0) { skipped++; continue; }
+                    const exists = state.candidates.some(c => c.name === name);
+                    if (exists) { skipped++; continue; }
+                    const newId = Date.now() + Math.random();
+                    const product = { id: newId, name, weight, priority, rebar, stock, count: 1, trackingEnabled: rebar > 0 };
+                    state.masterCandidates.push(JSON.parse(JSON.stringify(product)));
+                    state.candidates.push(product);
+                    added++;
+                }
+                input.value = '';
+                saveState();
+                updateUI();
+                showAlert(`CSV取込完了: ${added}件追加、${skipped}件スキップ`);
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+        window.importProductCSV = importProductCSV;
+
+        function removePourByOriginalId(productId) {
+            const item = state.pourList.find(p => Number(p.originalId) === Number(productId));
+            if (item) {
+                moveToCandidate(item.id);
+                showAlert(`打設リストから取り消しました。`);
+            }
+        }
+
+        window.removePourByOriginalId = removePourByOriginalId;
         window.moveCandidate = moveCandidate;
         window.updateQuantity = updateQuantity;
         window.moveToCandidate = moveToCandidate;
