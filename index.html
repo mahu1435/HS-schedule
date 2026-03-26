@@ -366,7 +366,11 @@
         .gauge-fill {
             height: 100%;
             background: var(--primary);
-            transition: width 0.3s ease;
+            transition: width 0.3s ease, background 0.5s ease;
+        }
+
+        .gauge-fill.gauge-mid {
+            background: #f59e0b;
         }
 
         .gauge-fill.goal-reached {
@@ -3559,16 +3563,17 @@
             saveState();
             updateUI();
             closeQtyPicker();
-            showUndoToast(p.name, _qtyPickerQty);
+            showUndoToast(p.name, _qtyPickerQty, p.weight);
         }
 
-        function showUndoToast(productName, qty) {
+        function showUndoToast(productName, qty, weight) {
             const toast = document.getElementById('undo-toast');
             const msg = document.getElementById('undo-toast-msg');
             const progress = document.getElementById('undo-toast-progress');
             if (!toast) return;
             const qtyText = qty > 1 ? ` ×${qty}` : '';
-            msg.textContent = `「${productName}${qtyText}」を追加しました`;
+            const totalWeight = weight ? (weight * qty).toLocaleString() + ' kg' : '';
+            msg.textContent = `「${productName}${qtyText}」を追加${totalWeight ? `（${totalWeight}）` : ''}しました`;
             toast.classList.add('visible');
             if (_undoToastTimer) clearTimeout(_undoToastTimer);
             // Animate progress bar
@@ -3819,7 +3824,10 @@
 
                 const per = Math.min((total / state.quota) * 100, 100);
                 elements.quotaGauge.style.width = `${per}%`;
-                elements.quotaGauge.className = 'gauge-fill' + (total >= state.quota ? ' goal-reached' : '');
+                let gaugeClass = 'gauge-fill';
+                if (total >= state.quota) gaugeClass += ' goal-reached';
+                else if (per >= 50) gaugeClass += ' gauge-mid';
+                elements.quotaGauge.className = gaugeClass;
 
                 // Remaining weight display
                 const remaining = Math.max(state.quota - total, 0);
