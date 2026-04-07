@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>コンクリート段取り管理</title>
+    <title>日報/段取り</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="日報/段取り">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link id="apple-touch-icon" rel="apple-touch-icon">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
@@ -3449,6 +3453,67 @@
                 }, 50);
             }, true); // capture: true → runs before the original bubble listener
         })();
+
+    // ─── PWA アイコン生成 ───────────────────────────────────
+    (function generateIcon() {
+      const c = document.createElement('canvas');
+      c.width = c.height = 180;
+      const ctx = c.getContext('2d');
+
+      // 角丸クリップ
+      const r = 38;
+      ctx.beginPath();
+      ctx.moveTo(r,0); ctx.lineTo(180-r,0); ctx.quadraticCurveTo(180,0,180,r);
+      ctx.lineTo(180,180-r); ctx.quadraticCurveTo(180,180,180-r,180);
+      ctx.lineTo(r,180); ctx.quadraticCurveTo(0,180,0,180-r);
+      ctx.lineTo(0,r); ctx.quadraticCurveTo(0,0,r,0);
+      ctx.closePath(); ctx.clip();
+
+      // グラデーション背景（グレー系 → スレート）
+      const g = ctx.createLinearGradient(0,0,180,180);
+      g.addColorStop(0, '#1e293b');
+      g.addColorStop(1, '#334155');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,180,180);
+
+      // ノートアイコン（canvas描画）
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+      ctx.lineWidth = 4.5;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      // ノート本体
+      ctx.strokeRect(62, 18, 56, 46);
+      // 横線3本
+      [32, 41, 50].forEach(y => {
+        ctx.beginPath(); ctx.moveTo(72, y); ctx.lineTo(108, y); ctx.stroke();
+      });
+      // バインダー穴（左側2つ）
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+      ctx.lineWidth = 3;
+      [26, 42].forEach(y => {
+        ctx.beginPath(); ctx.arc(62, y, 4, 0, Math.PI*2); ctx.stroke();
+      });
+
+      // 「日報」テキスト
+      ctx.fillStyle = 'rgba(255,255,255,0.65)';
+      ctx.font = '500 23px "Noto Sans JP", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('日報', 90, 106);
+
+      // 区切り線
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(50, 114); ctx.lineTo(130, 114); ctx.stroke();
+
+      // 「段取り」テキスト
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 40px "Noto Sans JP", sans-serif';
+      ctx.fillText('段取り', 90, 155);
+
+      const link = document.getElementById('apple-touch-icon');
+      if (link) link.href = c.toDataURL('image/png');
+    })();
 
     </script>
 </body>
